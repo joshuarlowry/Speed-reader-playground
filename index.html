@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Offline-first RSVP speed reader for txt, markdown, PDF, and EPUB files">
+  <title>Speed Reader</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="stylesheet" href="/src/styles.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Main reader view -->
+    <div id="reader-view" class="reader-view">
+      <div id="scope-indicator" class="scope-indicator hidden"></div>
+      <div id="word-container" class="word-container">
+        <span id="word-display" class="word-display"></span>
+      </div>
+    </div>
+
+    <!-- Controls overlay -->
+    <div id="controls-overlay" class="controls-overlay hidden">
+      <div class="controls-content">
+        <div class="controls-row">
+          <button id="btn-rewind" class="btn-icon" aria-label="Rewind 10 words">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 18l-6-6 6-6M18 18l-6-6 6-6"/>
+            </svg>
+          </button>
+          <button id="btn-play-pause" class="btn-primary" aria-label="Play/Pause">
+            <svg id="icon-play" width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8 5v14l11-7z"/>
+            </svg>
+            <svg id="icon-pause" class="hidden" width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+            </svg>
+          </button>
+          <button id="btn-forward" class="btn-icon" aria-label="Forward 10 words">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M13 18l6-6-6-6M6 18l6-6-6-6"/>
+            </svg>
+          </button>
+          <button id="btn-settings" class="btn-icon" aria-label="Settings">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"/>
+            </svg>
+          </button>
+        </div>
+        <div class="progress-row">
+          <input type="range" id="progress-scrubber" class="progress-scrubber" min="0" max="100" value="0" aria-label="Reading progress">
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings modal -->
+    <div id="settings-modal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Settings</h2>
+          <button id="btn-close-settings" class="btn-close" aria-label="Close settings">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="setting-group">
+            <label for="wpm-slider">Words per minute: <span id="wpm-value">300</span></label>
+            <input type="range" id="wpm-slider" min="100" max="1000" value="300" step="10">
+          </div>
+          <div class="setting-group">
+            <button id="btn-contents" class="btn-secondary">Contents</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contents drawer -->
+    <div id="contents-drawer" class="drawer hidden">
+      <div class="drawer-header">
+        <h2>Contents</h2>
+        <button id="btn-close-contents" class="btn-close" aria-label="Close contents">×</button>
+      </div>
+      <div id="contents-list" class="contents-list"></div>
+    </div>
+
+    <!-- Resume modal -->
+    <div id="resume-modal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Resume Reading</h2>
+        </div>
+        <div class="modal-body">
+          <p id="resume-preview"></p>
+          <div class="modal-actions">
+            <button id="btn-resume" class="btn-primary">Resume where you left off</button>
+            <button id="btn-start-over" class="btn-secondary">Start over</button>
+            <button id="btn-choose-bookmark" class="btn-secondary">Choose bookmark</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scope end modal -->
+    <div id="scope-end-modal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-body">
+          <p>End of section</p>
+          <div class="modal-actions">
+            <button id="btn-replay-scope" class="btn-primary">Replay</button>
+            <button id="btn-next-section" class="btn-secondary">Next section</button>
+            <button id="btn-clear-scope" class="btn-secondary">Clear scope</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- File upload area (initial state) -->
+    <div id="upload-area" class="upload-area">
+      <div class="upload-content">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="upload-icon">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        <h1>Speed Reader</h1>
+        <p>Upload a document to begin reading</p>
+        <input type="file" id="file-input" accept=".txt,.md,.pdf,.epub" aria-label="Upload document">
+        <label for="file-input" class="btn-primary">Choose File</label>
+        <button id="btn-load-demo" class="btn-secondary">Load Demo</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+  <script type="module">
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        const basePath = import.meta.env.BASE_URL || '/';
+        navigator.serviceWorker.register(basePath + 'sw.js')
+          .catch(err => console.log('SW registration failed:', err));
+      });
+    }
+  </script>
+</body>
+</html>
