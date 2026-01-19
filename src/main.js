@@ -548,21 +548,28 @@ const SAMPLE_BOOKS = {
   'pride-and-prejudice': {
     file: 'jane-austen_pride-and-prejudice.epub',
     title: 'Pride and Prejudice',
-    author: 'Jane Austen'
+    author: 'Jane Austen',
+    githubRepo: 'https://github.com/standardebooks/jane-austen_pride-and-prejudice',
+    license: 'The source text and artwork in this ebook are believed to be in the United States public domain; that is, they are believed to be free of copyright restrictions in the United States. They may still be copyrighted in other countries, so users located outside of the United States must check their local laws before using this ebook. The creators of, and contributors to, this ebook dedicate their contributions to the worldwide public domain via the terms in the CC0 1.0 Universal Public Domain Dedication.'
   },
   'brooklyn-murders': {
     file: 'g-d-h-cole_the-brooklyn-murders.epub',
     title: 'The Brooklyn Murders',
-    author: 'G.D.H. Cole'
+    author: 'G.D.H. Cole',
+    githubRepo: 'https://github.com/standardebooks/g-d-h-cole_the-brooklyn-murders',
+    license: 'The source text and artwork in this ebook are believed to be in the United States public domain; that is, they are believed to be free of copyright restrictions in the United States. They may still be copyrighted in other countries, so users located outside of the United States must check their local laws before using this ebook. The creators of, and contributors to, this ebook dedicate their contributions to the worldwide public domain via the terms in the CC0 1.0 Universal Public Domain Dedication.'
   },
   'princess-and-the-goblin': {
     file: 'george-macdonald_the-princess-and-the-goblin.epub',
     title: 'The Princess and the Goblin',
-    author: 'George MacDonald'
+    author: 'George MacDonald',
+    githubRepo: 'https://github.com/standardebooks/george-macdonald_the-princess-and-the-goblin',
+    license: 'The source text and artwork in this ebook are believed to be in the United States public domain; that is, they are believed to be free of copyright restrictions in the United States. They may still be copyrighted in other countries, so users located outside of the United States must check their local laws before using this ebook. The creators of, and contributors to, this ebook dedicate their contributions to the worldwide public domain via the terms in the CC0 1.0 Universal Public Domain Dedication.'
   }
 };
 
 function setupSampleBooks() {
+  // Book card click handlers
   const bookCards = document.querySelectorAll('.book-card');
   bookCards.forEach(card => {
     card.addEventListener('click', () => {
@@ -572,6 +579,66 @@ function setupSampleBooks() {
       }
     });
   });
+  
+  // Book info button handlers
+  const bookInfoBtns = document.querySelectorAll('.book-info-btn');
+  bookInfoBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation(); // Don't trigger book card click
+      const bookId = btn.dataset.bookInfo;
+      if (bookId && SAMPLE_BOOKS[bookId]) {
+        showBookInfoModal(bookId);
+      }
+    });
+  });
+  
+  // Book info modal close handler
+  const btnCloseBookInfo = document.getElementById('btn-close-book-info');
+  const bookInfoModal = document.getElementById('book-info-modal');
+  
+  if (btnCloseBookInfo && bookInfoModal) {
+    btnCloseBookInfo.addEventListener('click', () => {
+      bookInfoModal.classList.add('hidden');
+    });
+    
+    // Close on backdrop click
+    bookInfoModal.addEventListener('click', (e) => {
+      if (e.target === bookInfoModal) {
+        bookInfoModal.classList.add('hidden');
+      }
+    });
+    
+    // Close on escape
+    bookInfoModal.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        bookInfoModal.classList.add('hidden');
+      }
+    });
+  }
+}
+
+function showBookInfoModal(bookId) {
+  const book = SAMPLE_BOOKS[bookId];
+  if (!book) return;
+  
+  const modal = document.getElementById('book-info-modal');
+  const titleEl = document.getElementById('book-info-title');
+  const sourceEl = document.getElementById('book-info-source');
+  const licenseEl = document.getElementById('book-info-license');
+  
+  if (!modal || !titleEl || !sourceEl || !licenseEl) return;
+  
+  titleEl.textContent = book.title;
+  sourceEl.innerHTML = `Source: <a href="${book.githubRepo}" target="_blank" rel="noopener noreferrer" class="text-accent hover:underline">${book.githubRepo}</a>`;
+  licenseEl.textContent = book.license;
+  
+  modal.classList.remove('hidden');
+  
+  // Focus the close button
+  const closeBtn = document.getElementById('btn-close-book-info');
+  if (closeBtn) {
+    setTimeout(() => closeBtn.focus(), 50);
+  }
 }
 
 async function loadSampleBook(bookId) {

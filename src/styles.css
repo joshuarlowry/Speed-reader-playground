@@ -521,6 +521,27 @@
   @apply grid grid-cols-2 gap-4 md:gap-6;
 }
 
+.book-card-wrapper {
+  @apply relative;
+}
+
+.book-info-btn {
+  @apply absolute top-2 right-2 z-10;
+  @apply w-7 h-7 rounded-full;
+  @apply bg-background/80 backdrop-blur-sm;
+  @apply border border-border/50;
+  @apply flex items-center justify-center;
+  @apply text-muted-foreground hover:text-foreground;
+  @apply hover:bg-background hover:border-border;
+  @apply transition-all duration-200;
+  @apply cursor-pointer;
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+}
+
+.book-info-btn:hover {
+  @apply scale-110;
+}
+
 .book-card {
   @apply flex flex-col bg-card/80 backdrop-blur-md border border-border rounded-xl overflow-hidden;
   @apply transition-all duration-200 cursor-pointer;

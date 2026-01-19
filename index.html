@@ -34,7 +34,7 @@
 </head>
 <body class="h-full">
   <!-- Skip link for keyboard users -->
-  <a href="#main-content" class="skip-link">Skip to main content</a>
+  <a href="#upload-area" class="skip-link">Skip to main content</a>
   
   <div id="app" class="h-full w-full">
     <!-- Main reader view -->
@@ -233,8 +233,23 @@
       </div>
     </div>
 
+    <!-- Book info/license modal -->
+    <div id="book-info-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="book-info-title">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="book-info-title">Book Information</h2>
+          <button id="btn-close-book-info" class="btn-close" aria-label="Close">×</button>
+        </div>
+        <div class="modal-body">
+          <p id="book-info-source" class="mb-4"></p>
+          <h3 class="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">License</h3>
+          <p id="book-info-license" class="text-sm text-foreground/80 leading-relaxed"></p>
+        </div>
+      </div>
+    </div>
+
     <!-- File upload area (initial state) -->
-    <div id="upload-area" class="upload-area" id="main-content">
+    <div id="upload-area" class="upload-area">
       <div class="upload-content-wrapper">
         <header class="upload-header">
           <h1>Speed Reader</h1>
@@ -255,33 +270,60 @@
         <section class="sample-books-section" aria-labelledby="sample-books-heading">
           <h2 id="sample-books-heading">Sample Books</h2>
           <div class="sample-books-grid" role="list">
-            <button class="book-card" data-book="pride-and-prejudice" role="listitem" aria-label="Open Pride and Prejudice by Jane Austen">
-              <div class="book-cover">
-                <img src="./books/pride-and-prejudice-cover.avif" alt="" loading="lazy" aria-hidden="true">
-              </div>
-              <div class="book-info">
-                <span class="book-title">Pride and Prejudice</span>
-                <span class="book-author">Jane Austen</span>
-              </div>
-            </button>
-            <button class="book-card" data-book="brooklyn-murders" role="listitem" aria-label="Open The Brooklyn Murders by G.D.H. Cole">
-              <div class="book-cover">
-                <img src="./books/brooklyn-murders-cover.avif" alt="" loading="lazy" aria-hidden="true">
-              </div>
-              <div class="book-info">
-                <span class="book-title">The Brooklyn Murders</span>
-                <span class="book-author">G.D.H. Cole</span>
-              </div>
-            </button>
-            <button class="book-card" data-book="princess-and-the-goblin" role="listitem" aria-label="Open The Princess and the Goblin by George MacDonald">
-              <div class="book-cover">
-                <img src="./books/princess-and-the-goblin-cover.avif" alt="" loading="lazy" aria-hidden="true">
-              </div>
-              <div class="book-info">
-                <span class="book-title">The Princess and the Goblin</span>
-                <span class="book-author">George MacDonald</span>
-              </div>
-            </button>
+            <div class="book-card-wrapper" role="listitem">
+              <button class="book-card" data-book="pride-and-prejudice" aria-label="Open Pride and Prejudice by Jane Austen">
+                <div class="book-cover">
+                  <img src="./books/pride-and-prejudice-cover.avif" alt="" loading="lazy" aria-hidden="true">
+                </div>
+                <div class="book-info">
+                  <span class="book-title">Pride and Prejudice</span>
+                  <span class="book-author">Jane Austen</span>
+                </div>
+              </button>
+              <button class="book-info-btn" aria-label="License and source information for Pride and Prejudice" data-book-info="pride-and-prejudice">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <path d="M12 16v-4"></path>
+                  <path d="M12 8h.01"></path>
+                </svg>
+              </button>
+            </div>
+            <div class="book-card-wrapper" role="listitem">
+              <button class="book-card" data-book="brooklyn-murders" aria-label="Open The Brooklyn Murders by G.D.H. Cole">
+                <div class="book-cover">
+                  <img src="./books/brooklyn-murders-cover.avif" alt="" loading="lazy" aria-hidden="true">
+                </div>
+                <div class="book-info">
+                  <span class="book-title">The Brooklyn Murders</span>
+                  <span class="book-author">G.D.H. Cole</span>
+                </div>
+              </button>
+              <button class="book-info-btn" aria-label="License and source information for The Brooklyn Murders" data-book-info="brooklyn-murders">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <path d="M12 16v-4"></path>
+                  <path d="M12 8h.01"></path>
+                </svg>
+              </button>
+            </div>
+            <div class="book-card-wrapper" role="listitem">
+              <button class="book-card" data-book="princess-and-the-goblin" aria-label="Open The Princess and the Goblin by George MacDonald">
+                <div class="book-cover">
+                  <img src="./books/princess-and-the-goblin-cover.avif" alt="" loading="lazy" aria-hidden="true">
+                </div>
+                <div class="book-info">
+                  <span class="book-title">The Princess and the Goblin</span>
+                  <span class="book-author">George MacDonald</span>
+                </div>
+              </button>
+              <button class="book-info-btn" aria-label="License and source information for The Princess and the Goblin" data-book-info="princess-and-the-goblin">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <path d="M12 16v-4"></path>
+                  <path d="M12 8h.01"></path>
+                </svg>
+              </button>
+            </div>
           </div>
           <p class="standard-ebooks-credit">
             Books provided by <a href="https://standardebooks.org" target="_blank" rel="noopener noreferrer">Standard Ebooks</a>
