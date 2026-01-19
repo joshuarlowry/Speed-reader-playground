@@ -72,53 +72,46 @@ async function init() {
     btnLoadDemo.addEventListener('click', loadDemo);
 
     // Setup scope end modal (these might not exist initially)
-    if (btnReplayScope) {
+    if (btnReplayScope && scopeEndModal) {
       btnReplayScope.addEventListener('click', () => {
-      scopeEndModal.classList.add('hidden');
-      if (playbackController && playbackController.scope) {
-        playbackController.setIndex(playbackController.scope.startIndex);
-        playbackController.clearScope();
-        playbackController.play();
-        controls.updatePlayPauseIcon(true);
-      }
+        scopeEndModal.classList.add('hidden');
+        if (playbackController && playbackController.scope) {
+          playbackController.setIndex(playbackController.scope.startIndex);
+          playbackController.clearScope();
+          playbackController.play();
+          controls.updatePlayPauseIcon(true);
+        }
       });
     }
 
-    if (btnNextSection) {
+    if (btnNextSection && scopeEndModal) {
       btnNextSection.addEventListener('click', () => {
-      scopeEndModal.classList.add('hidden');
-      // Find next section
-      if (currentOutline && playbackController && playbackController.scope) {
-        const currentEnd = playbackController.scope.endIndex;
-        const nextSection = currentOutline.find(item => item.startIndex >= currentEnd);
-        if (nextSection) {
-          contents.onReadSection(nextSection.startIndex, nextSection.endIndex);
-        } else {
+        scopeEndModal.classList.add('hidden');
+        // Find next section
+        if (currentOutline && playbackController && playbackController.scope) {
+          const currentEnd = playbackController.scope.endIndex;
+          const nextSection = currentOutline.find(item => item.startIndex >= currentEnd);
+          if (nextSection) {
+            contents.onReadSection(nextSection.startIndex, nextSection.endIndex);
+          } else {
+            playbackController.clearScope();
+            scopePill.hide();
+          }
+        }
+      });
+    }
+
+    if (btnClearScope && scopeEndModal) {
+      btnClearScope.addEventListener('click', () => {
+        scopeEndModal.classList.add('hidden');
+        if (playbackController) {
           playbackController.clearScope();
           scopePill.hide();
         }
-      }
       });
     }
 
-    if (btnClearScope) {
-      btnClearScope.addEventListener('click', () => {
-      scopeEndModal.classList.add('hidden');
-      if (playbackController) {
-        playbackController.clearScope();
-        scopePill.hide();
-      }
-      });
-    }
-
-    // Setup contents button
-    if (btnContents) {
-      btnContents.addEventListener('click', () => {
-      if (contents) {
-        contents.show();
-      }
-      });
-    }
+    // Contents button is now handled by Controls class via btn-contents-quick
   } catch (error) {
     console.error('Initialization error:', error);
     throw error; // Let global error handler catch it
@@ -176,19 +169,37 @@ async function loadDocument(file) {
     });
     currentDocId = docId;
 
-    // Initialize playback
+    // Initialize playback (creates playbackController, contents, controls, scopePill)
     initializePlayback(tokens);
 
     // Show reader view
     uploadArea.classList.add('hidden');
     readerView.classList.remove('hidden');
 
-    // Check for resume
-    const progress = await getProgress(docId);
-    if (progress) {
-      resumeModal.show(docId, tokens);
+    // Default behavior: if there are sections, auto-scope to first section
+    // If no sections, check for resume or start from beginning
+    if (currentOutline && currentOutline.length > 0) {
+      // Has sections - set scope to first section and start reading
+      const firstSection = currentOutline[0];
+      playbackController.setScope(firstSection.startIndex, firstSection.endIndex);
+      playbackController.setIndex(firstSection.startIndex);
+      if (scopePill) {
+        scopePill.show(firstSection.title);
+      }
+      if (tokens[firstSection.startIndex]) {
+        renderWord(tokens[firstSection.startIndex].word, wordContainer);
+      }
+      if (controls) {
+        controls.update();
+      }
     } else {
-      startReading(0);
+      // No sections - check for resume or start from beginning
+      const progress = await getProgress(docId);
+      if (progress) {
+        resumeModal.show(docId, tokens);
+      } else {
+        startReading(0);
+      }
     }
   } catch (error) {
     console.error('Error loading document:', error);
@@ -225,13 +236,11 @@ function initializePlayback(tokens) {
     }
   );
 
-  // Create UI components
-  controls = new Controls(playbackController);
   contents = new Contents(
     currentOutline,
     playbackController,
     (index) => {
-      // On jump
+      // On jump (removed - no longer used, but kept for compatibility)
       const safeIndex = Math.max(0, Math.min(index, tokens.length - 1));
       playbackController.setIndex(safeIndex);
       playbackController.pause();
@@ -262,6 +271,16 @@ function initializePlayback(tokens) {
       }
     }
   );
+  
+  // Create controls with contents callback and outline
+  controls = new Controls(
+    playbackController, 
+    wordContainer, 
+    tokens,
+    () => contents.show(),
+    currentOutline // pass outline
+  );
+  
   scopePill = new ScopePill();
   resumeModal = new ResumeModal(
     async () => {
@@ -315,13 +334,13 @@ async function saveCurrentProgress() {
 async function loadDemo() {
   try {
     const basePath = import.meta.env.BASE_URL || '/';
-    const response = await fetch(basePath + 'demo.txt');
+    const response = await fetch(basePath + 'demo.md');
     if (!response.ok) {
       throw new Error('Failed to load demo file');
     }
     const text = await response.text();
-    const blob = new Blob([text], { type: 'text/plain' });
-    const file = new File([blob], 'demo.txt', { type: 'text/plain' });
+    const blob = new Blob([text], { type: 'text/markdown' });
+    const file = new File([blob], 'demo.md', { type: 'text/markdown' });
     await loadDocument(file);
   } catch (error) {
     console.error('Error loading demo:', error);

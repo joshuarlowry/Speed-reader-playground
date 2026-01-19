@@ -42,6 +42,14 @@ export function renderWord(word, container) {
   const wordDisplay = container.querySelector('.word-display');
   if (!wordDisplay) return;
   
+  // Hide word during positioning to prevent flash
+  wordDisplay.style.opacity = '0';
+  wordDisplay.style.visibility = 'hidden';
+  
+  // Reset transform first to ensure clean measurement
+  wordDisplay.style.transform = 'none';
+  wordDisplay.style.willChange = 'transform';
+  
   wordDisplay.innerHTML = `
     <span>${escapeHtml(spans.leadingPunct)}</span>
     <span>${escapeHtml(spans.pre)}</span>
@@ -50,8 +58,19 @@ export function renderWord(word, container) {
     <span>${escapeHtml(spans.trailingPunct)}</span>
   `;
 
-  // Center ORP after rendering
-  requestAnimationFrame(() => centerORP(wordDisplay, container));
+  // Use triple RAF to ensure DOM is fully rendered, layout is complete, and browser has painted
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        centerORP(wordDisplay, container);
+        // Show word instantly after centering - no fade animation
+        wordDisplay.style.opacity = '1';
+        wordDisplay.style.visibility = 'visible';
+        // Force immediate display (no transition)
+        wordDisplay.style.transition = 'none';
+      });
+    });
+  });
 }
 
 function escapeHtml(text) {
@@ -63,40 +82,47 @@ function escapeHtml(text) {
 function centerORP(wordDisplay, container) {
   if (!wordDisplay || !container) return;
 
-  // Get computed font
-  const computedStyle = window.getComputedStyle(wordDisplay);
-  const font = `${computedStyle.fontWeight} ${computedStyle.fontSize} ${computedStyle.fontFamily}`;
-
-  // Create canvas for measurement
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
-  ctx.font = font;
-
-  // Measure widths
+  // Ensure container is at base position (centered) - this should never change
+  container.style.transform = 'translate(-50%, -50%)';
+  container.style.willChange = 'auto'; // Container doesn't move
+  
+  // Ensure word-display has no transform for measurement
+  wordDisplay.style.transform = 'none';
+  
+  // Force multiple synchronous layout recalculations to ensure everything is settled
+  void container.offsetWidth;
+  void wordDisplay.offsetWidth;
+  void container.offsetHeight;
+  void wordDisplay.offsetHeight;
+  
+  // Get screen center - this is our fixed anchor point
+  const screenCenterX = window.innerWidth / 2;
+  
+  // Find the ORP span
   const spans = wordDisplay.querySelectorAll('span');
-  let leadingWidth = 0;
-  let orpWidth = 0;
-  let foundORP = false;
-
+  let orpSpan = null;
+  
   for (const span of spans) {
-    const text = span.textContent;
-    const width = ctx.measureText(text).width;
-
     if (span.classList.contains('orp')) {
-      orpWidth = width;
-      foundORP = true;
+      orpSpan = span;
       break;
-    } else {
-      leadingWidth += width;
     }
   }
-
-  if (!foundORP) return;
-
-  // Calculate offset
-  const anchorX = window.innerWidth / 2;
-  const xOffset = anchorX - (leadingWidth + orpWidth / 2);
-
-  // Apply transform to container
-  container.style.transform = `translateX(${xOffset}px)`;
+  
+  if (!orpSpan) return;
+  
+  // Get the ORP span's actual rendered position on screen
+  const orpRect = orpSpan.getBoundingClientRect();
+  const orpCenterX = orpRect.left + orpRect.width / 2;
+  
+  // Calculate exact offset needed to align ORP center with screen center
+  const offsetNeeded = screenCenterX - orpCenterX;
+  
+  // Apply transform immediately with no transition
+  // Use translate3d for hardware acceleration and smoother rendering
+  wordDisplay.style.transform = `translate3d(${offsetNeeded}px, 0, 0)`;
+  wordDisplay.style.willChange = 'transform';
+  
+  // Force a layout recalculation to ensure transform is applied
+  void wordDisplay.offsetWidth;
 }

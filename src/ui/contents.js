@@ -40,37 +40,19 @@ export class Contents {
       const div = document.createElement('div');
       div.className = `contents-item contents-item-level-${item.level}`;
       
+      const titleWrapper = document.createElement('div');
+      titleWrapper.className = 'contents-item-title-wrapper';
+      
       const title = document.createElement('div');
       title.className = 'contents-item-title';
       title.textContent = item.title;
-      div.appendChild(title);
+      titleWrapper.appendChild(title);
 
-      const actions = document.createElement('div');
-      actions.className = 'contents-item-actions';
-      
-      const btnRead = document.createElement('button');
-      btnRead.className = 'btn btn-secondary text-xs px-3 py-1.5';
-      btnRead.textContent = 'Read';
-      btnRead.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.onReadSection(item.startIndex, item.endIndex);
-        this.hide();
-      });
-      actions.appendChild(btnRead);
+      div.appendChild(titleWrapper);
 
-      const btnJump = document.createElement('button');
-      btnJump.className = 'btn btn-ghost text-xs px-3 py-1.5';
-      btnJump.textContent = 'Jump';
-      btnJump.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.onJump(item.startIndex);
-        this.hide();
-      });
-      actions.appendChild(btnJump);
-
-      div.appendChild(actions);
+      // Clicking the item reads that section (removed jump concept)
       div.addEventListener('click', () => {
-        this.onJump(item.startIndex);
+        this.onReadSection(item.startIndex, item.endIndex);
         this.hide();
       });
 

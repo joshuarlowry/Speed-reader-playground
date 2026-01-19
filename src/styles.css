@@ -48,6 +48,11 @@
   .text-balance {
     text-wrap: balance;
   }
+  
+  /* Ensure hidden class works */
+  .hidden {
+    display: none !important;
+  }
 }
 
 /* Custom animations */
@@ -116,14 +121,27 @@
 }
 
 .word-container {
-  @apply relative w-full max-w-[90vw] text-center;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: auto;
+  max-width: none;
+  text-align: left;
+  /* Ensure container position is stable */
+  will-change: auto;
+  backface-visibility: hidden;
 }
 
 .word-display {
   @apply font-serif text-4xl md:text-6xl lg:text-7xl leading-tight text-foreground inline-block whitespace-nowrap;
   font-feature-settings: "liga" 1, "kern" 1, "onum" 1;
   letter-spacing: -0.02em;
-  transition: opacity 0.15s ease-out;
+  /* No transitions - words must appear/disappear instantly for high-speed reading */
+  /* Optimize for stable rendering */
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translateZ(0); /* Force hardware acceleration */
 }
 
 .word-display .orp {
@@ -161,12 +179,21 @@
   @apply fixed bottom-0 left-0 right-0 z-50 p-4 pb-6 md:pb-8;
   background: linear-gradient(to top, hsl(var(--background) / 0.98) 0%, transparent 100%);
   backdrop-filter: blur(12px);
-  transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+  transition: opacity 0.3s ease-out, transform 0.2s ease-out;
 }
 
 .controls-overlay.hidden {
-  @apply opacity-0 pointer-events-none;
-  transform: translateY(100%);
+  display: none !important;
+}
+
+.controls-overlay.faded {
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+.controls-overlay.faded:hover {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .controls-content {
@@ -174,11 +201,29 @@
 }
 
 .controls-row {
-  @apply flex items-center justify-center gap-3 mb-4;
+  @apply flex items-center justify-center gap-3 mb-2;
+}
+
+.speed-indicator {
+  @apply flex flex-col items-center justify-center min-w-[60px] px-2;
+}
+
+.wpm-display {
+  @apply text-accent font-semibold text-lg leading-tight;
+}
+
+.wpm-label {
+  @apply text-muted-foreground text-xs;
 }
 
 .progress-row {
-  @apply w-full px-2;
+  @apply w-full px-2 mb-2;
+}
+
+.controls-separator {
+  @apply text-muted-foreground text-lg;
+  opacity: 0.3;
+  user-select: none;
 }
 
 /* Buttons - shadcn style */
@@ -252,7 +297,7 @@
 }
 
 .modal.hidden {
-  display: none;
+  display: none !important;
 }
 
 .modal-content {
@@ -293,7 +338,7 @@
 }
 
 .drawer.hidden {
-  transform: translateY(100%);
+  display: none !important;
 }
 
 .drawer-header {
@@ -309,10 +354,10 @@
 }
 
 .contents-item {
-  @apply p-4 rounded-lg cursor-pointer transition-all duration-200;
+  @apply rounded-lg cursor-pointer transition-colors duration-150;
   @apply hover:bg-accent/5 active:bg-accent/10;
   @apply border border-transparent hover:border-accent/10;
-  @apply hover:shadow-sm;
+  padding: 0.75rem 1rem;
 }
 
 .contents-item-level-1 {
@@ -331,12 +376,15 @@
   @apply pl-16;
 }
 
-.contents-item-title {
-  @apply text-base mb-1 font-medium;
+.contents-item-title-wrapper {
+  @apply flex items-center justify-between gap-3;
+  width: 100%;
 }
 
-.contents-item-actions {
-  @apply flex gap-2 mt-2;
+.contents-item-title {
+  @apply flex-1 text-[0.9375rem] leading-relaxed font-medium;
+  word-wrap: break-word;
+  white-space: normal;
 }
 
 /* Upload area */

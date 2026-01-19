@@ -44,8 +44,28 @@
     <!-- Controls overlay -->
     <div id="controls-overlay" class="controls-overlay hidden">
       <div class="controls-content">
+        <div class="progress-row">
+          <input type="range" id="progress-scrubber" class="progress-scrubber" min="0" max="100" value="0" aria-label="Reading progress">
+        </div>
         <div class="controls-row">
-          <button id="btn-rewind" class="btn btn-icon" aria-label="Rewind 10 words">
+          <button id="btn-contents-quick" class="btn btn-icon" aria-label="Contents">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="8" y1="6" x2="21" y2="6"></line>
+              <line x1="8" y1="12" x2="21" y2="12"></line>
+              <line x1="8" y1="18" x2="21" y2="18"></line>
+              <line x1="3" y1="6" x2="3.01" y2="6"></line>
+              <line x1="3" y1="12" x2="3.01" y2="12"></line>
+              <line x1="3" y1="18" x2="3.01" y2="18"></line>
+            </svg>
+          </button>
+          <span class="controls-separator">|</span>
+          <button id="btn-prev-section" class="btn btn-icon" aria-label="Previous section">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="11 17 6 12 11 7"></polyline>
+              <line x1="6" y1="12" x2="18" y2="12"></line>
+            </svg>
+          </button>
+          <button id="btn-rewind" class="btn btn-icon" aria-label="Rewind 5 seconds">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="11 17 6 12 11 7"></polyline>
               <polyline points="18 17 13 12 18 7"></polyline>
@@ -60,26 +80,41 @@
               <rect x="14" y="4" width="4" height="16"></rect>
             </svg>
           </button>
-          <button id="btn-forward" class="btn btn-icon" aria-label="Forward 10 words">
+          <button id="btn-forward" class="btn btn-icon" aria-label="Forward 5 seconds">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="13 17 18 12 13 7"></polyline>
               <polyline points="6 17 11 12 6 7"></polyline>
             </svg>
           </button>
-          <button id="btn-settings" class="btn btn-icon" aria-label="Settings">
+          <button id="btn-next-section" class="btn btn-icon" aria-label="Next section">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="3"></circle>
-              <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"></path>
+              <polyline points="13 17 18 12 13 7"></polyline>
+              <line x1="18" y1="12" x2="6" y2="12"></line>
             </svg>
           </button>
-        </div>
-        <div class="progress-row">
-          <input type="range" id="progress-scrubber" class="progress-scrubber" min="0" max="100" value="0" aria-label="Reading progress">
+          <span class="controls-separator">|</span>
+          <button id="btn-speed-down" class="btn btn-icon" aria-label="Decrease speed">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="8" y1="12" x2="16" y2="12"></line>
+            </svg>
+          </button>
+          <div class="speed-indicator">
+            <span id="wpm-display" class="wpm-display">300</span>
+            <span class="wpm-label">WPM</span>
+          </div>
+          <button id="btn-speed-up" class="btn btn-icon" aria-label="Increase speed">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="16"></line>
+              <line x1="8" y1="12" x2="16" y2="12"></line>
+            </svg>
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- Settings modal -->
+    <!-- Settings modal (kept for advanced settings if needed) -->
     <div id="settings-modal" class="modal hidden">
       <div class="modal-content">
         <div class="modal-header">
@@ -93,9 +128,6 @@
               <span id="wpm-value" class="text-accent font-semibold">300</span>
             </label>
             <input type="range" id="wpm-slider" min="100" max="1000" value="300" step="10" class="w-full">
-          </div>
-          <div class="setting-group">
-            <button id="btn-contents" class="btn btn-secondary w-full">Contents</button>
           </div>
         </div>
       </div>
@@ -206,13 +238,17 @@
     setTimeout(() => {
       const app = document.getElementById('app');
       const uploadArea = document.getElementById('upload-area');
-      if (app && (!uploadArea || uploadArea.classList.contains('hidden')) && !document.getElementById('reader-view')?.classList.contains('hidden')) {
-        // App might not have initialized - check for errors
-        const errorDisplay = document.getElementById('error-display');
-        if (errorDisplay && errorDisplay.classList.contains('hidden')) {
-          // No error shown but app seems stuck - show a warning
-          console.warn('App may not have initialized properly');
-        }
+      const readerView = document.getElementById('reader-view');
+      const errorDisplay = document.getElementById('error-display');
+      
+      // Only warn if nothing is visible (both upload and reader are hidden)
+      // This indicates the app might be stuck
+      if (app && 
+          uploadArea && uploadArea.classList.contains('hidden') && 
+          readerView && readerView.classList.contains('hidden') &&
+          errorDisplay && errorDisplay.classList.contains('hidden')) {
+        // No visible UI elements - app might not have initialized
+        console.warn('App may not have initialized properly - no UI elements visible');
       }
     }, 3000);
   </script>
