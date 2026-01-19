@@ -435,41 +435,103 @@
 
 /* Upload area */
 .upload-area {
-  @apply flex items-center justify-center w-full h-full p-8;
+  @apply flex items-center justify-center w-full h-full p-4 md:p-8;
   background: 
     radial-gradient(ellipse 100% 50% at 50% 0%, hsl(var(--accent) / 0.05) 0%, transparent 50%),
     hsl(var(--background));
   min-height: 100vh;
   min-height: 100dvh; /* Dynamic viewport height for mobile */
+  overflow-y: auto;
 }
 
 .upload-area:not(.hidden) {
   display: flex !important;
 }
 
-.upload-content {
-  @apply text-center max-w-md space-y-6 animate-fade-in;
-  @apply bg-card/80 backdrop-blur-md border border-border rounded-2xl p-12;
-  @apply shadow-2xl;
+.upload-content-wrapper {
+  @apply w-full max-w-2xl mx-auto animate-fade-in;
+  @apply flex flex-col gap-8;
 }
 
-.upload-icon {
-  @apply mx-auto text-muted-foreground/40;
-  @apply transition-transform duration-300;
+.upload-header {
+  @apply text-center space-y-4;
 }
 
-.upload-area:hover .upload-icon {
-  @apply scale-110 text-accent/60;
-}
-
-.upload-content h1 {
-  @apply text-4xl md:text-5xl font-light mb-2;
+.upload-header h1 {
+  @apply text-4xl md:text-5xl font-light;
   @apply text-foreground;
   letter-spacing: -0.03em;
 }
 
-.upload-content p {
+.upload-header p {
   @apply text-muted-foreground text-lg;
+}
+
+.upload-actions {
+  @apply flex justify-center mt-6;
+}
+
+.upload-actions .btn {
+  @apply gap-2;
+}
+
+/* Sample books section */
+.sample-books-section {
+  @apply space-y-6;
+}
+
+.sample-books-section h2 {
+  @apply text-sm font-medium text-muted-foreground uppercase tracking-wider text-center;
+}
+
+.sample-books-grid {
+  @apply grid grid-cols-2 gap-4 md:gap-6;
+}
+
+.book-card {
+  @apply flex flex-col bg-card/80 backdrop-blur-md border border-border rounded-xl overflow-hidden;
+  @apply transition-all duration-200 cursor-pointer;
+  @apply hover:border-accent/40 hover:shadow-lg hover:shadow-accent/5 hover:scale-[1.02];
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+}
+
+.book-card:active {
+  @apply scale-[0.98];
+}
+
+.book-cover {
+  @apply aspect-[2/3] w-full overflow-hidden bg-muted/30;
+}
+
+.book-cover img {
+  @apply w-full h-full object-cover;
+  @apply transition-transform duration-300;
+}
+
+.book-card:hover .book-cover img {
+  @apply scale-105;
+}
+
+.book-info {
+  @apply p-3 md:p-4 flex flex-col gap-0.5 text-left;
+}
+
+.book-title {
+  @apply text-sm md:text-base font-medium text-foreground leading-tight;
+}
+
+.book-author {
+  @apply text-xs md:text-sm text-muted-foreground;
+}
+
+/* Standard Ebooks credit */
+.standard-ebooks-credit {
+  @apply text-center text-xs text-muted-foreground/60;
+}
+
+.standard-ebooks-credit a {
+  @apply text-muted-foreground/80 hover:text-accent underline underline-offset-2;
+  @apply transition-colors duration-200;
 }
 
 /* Settings */

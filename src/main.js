@@ -23,7 +23,7 @@ let scopePill = null;
 let resumeModal = null;
 
 // Wait for DOM to be ready
-let uploadArea, readerView, fileInput, btnLoadDemo, wordContainer, wordDisplay;
+let uploadArea, readerView, fileInput, wordContainer, wordDisplay;
 let scopeEndModal, btnReplayScope, btnNextSection, btnClearScope, btnContents;
 let btnBookMenu, bookMenuDropdown, btnCloseBook;
 
@@ -39,7 +39,6 @@ function getElements() {
   uploadArea = document.getElementById('upload-area');
   readerView = document.getElementById('reader-view');
   fileInput = document.getElementById('file-input');
-  btnLoadDemo = document.getElementById('btn-load-demo');
   wordContainer = document.getElementById('word-container');
   wordDisplay = document.getElementById('word-display');
   scopeEndModal = document.getElementById('scope-end-modal');
@@ -70,7 +69,9 @@ async function init() {
     
     // Setup file input
     fileInput.addEventListener('change', handleFileUpload);
-    btnLoadDemo.addEventListener('click', loadDemo);
+    
+    // Setup sample book cards
+    setupSampleBooks();
 
     // Setup scope end modal (these might not exist initially)
     if (btnReplayScope && scopeEndModal) {
@@ -443,20 +444,48 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-async function loadDemo() {
+// Sample books configuration
+const SAMPLE_BOOKS = {
+  'pride-and-prejudice': {
+    file: 'jane-austen_pride-and-prejudice.epub',
+    title: 'Pride and Prejudice',
+    author: 'Jane Austen'
+  },
+  'brooklyn-murders': {
+    file: 'g-d-h-cole_the-brooklyn-murders.epub',
+    title: 'The Brooklyn Murders',
+    author: 'G.D.H. Cole'
+  }
+};
+
+function setupSampleBooks() {
+  const bookCards = document.querySelectorAll('.book-card');
+  bookCards.forEach(card => {
+    card.addEventListener('click', () => {
+      const bookId = card.dataset.book;
+      if (bookId && SAMPLE_BOOKS[bookId]) {
+        loadSampleBook(bookId);
+      }
+    });
+  });
+}
+
+async function loadSampleBook(bookId) {
+  const book = SAMPLE_BOOKS[bookId];
+  if (!book) return;
+  
   try {
     const basePath = import.meta.env.BASE_URL || '/';
-    const response = await fetch(basePath + 'demo.md');
+    const response = await fetch(basePath + 'books/' + book.file);
     if (!response.ok) {
-      throw new Error('Failed to load demo file');
+      throw new Error(`Failed to load ${book.title}`);
     }
-    const text = await response.text();
-    const blob = new Blob([text], { type: 'text/markdown' });
-    const file = new File([blob], 'demo.md', { type: 'text/markdown' });
+    const blob = await response.blob();
+    const file = new File([blob], book.file, { type: 'application/epub+zip' });
     await loadDocument(file);
   } catch (error) {
-    console.error('Error loading demo:', error);
-    alert('Error loading demo file: ' + error.message);
+    console.error('Error loading sample book:', error);
+    alert('Error loading book: ' + error.message);
   }
 }
 
