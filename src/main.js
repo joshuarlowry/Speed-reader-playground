@@ -365,14 +365,13 @@ async function processDocument(file) {
     // Initialize playback with selected WPM
     initializePlayback(tokens, selectedWPM);
 
-    // Show reader view and controls
+    // Show reader view
     uploadArea.classList.add('hidden');
     readerView.classList.remove('hidden');
     
-    // Show controls overlay (starts faded)
-    const controlsOverlay = document.getElementById('controls-overlay');
-    if (controlsOverlay) {
-      controlsOverlay.classList.remove('hidden');
+    // Show controls overlay in faded state
+    if (controls) {
+      controls.fadeControls();
     }
 
     // Show table of contents first if there are sections

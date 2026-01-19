@@ -8,12 +8,11 @@ export class Controls {
     this.tokens = tokens;
     this.onShowContents = onShowContents;
     this.outline = outline || [];
-    this.controlsVisible = true; // Controls always visible now
+    this.controlsVisible = false; // Start hidden, will be shown when reader view activates
     this.fadeTimeout = null;
     this.setupElements();
     this.setupEventListeners();
-    // Start with controls visible but faded
-    this.fadeControls();
+    // Don't show controls here - main.js will show them after reader view is visible
   }
 
   setupElements() {
