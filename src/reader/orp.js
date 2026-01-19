@@ -50,13 +50,13 @@ export function renderWord(word, container) {
   wordDisplay.style.transform = 'none';
   wordDisplay.style.willChange = 'transform';
   
-  wordDisplay.innerHTML = `
-    <span>${escapeHtml(spans.leadingPunct)}</span>
-    <span>${escapeHtml(spans.pre)}</span>
-    <span class="orp">${escapeHtml(spans.orp)}</span>
-    <span>${escapeHtml(spans.post)}</span>
-    <span>${escapeHtml(spans.trailingPunct)}</span>
-  `;
+  // No whitespace between spans to prevent gaps in the word
+  wordDisplay.innerHTML = 
+    `<span>${escapeHtml(spans.leadingPunct)}</span>` +
+    `<span>${escapeHtml(spans.pre)}</span>` +
+    `<span class="orp">${escapeHtml(spans.orp)}</span>` +
+    `<span>${escapeHtml(spans.post)}</span>` +
+    `<span>${escapeHtml(spans.trailingPunct)}</span>`;
 
   // Use triple RAF to ensure DOM is fully rendered, layout is complete, and browser has painted
   requestAnimationFrame(() => {
