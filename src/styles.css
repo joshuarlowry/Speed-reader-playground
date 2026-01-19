@@ -188,12 +188,12 @@
 
 .controls-overlay.faded {
   opacity: 0.2;
-  pointer-events: none;
+  /* Controls remain fully interactive even when faded */
 }
 
 .controls-overlay.faded:hover {
   opacity: 1;
-  pointer-events: auto;
+  transition: opacity 0.2s ease-out;
 }
 
 .controls-content {

@@ -53,7 +53,10 @@ export class Controls {
       } else {
         this.playback.play();
         this.updatePlayPauseIcon(true);
-        this.fadeControls(); // Fade controls when playing
+        // Small delay to ensure controls are visible before fading
+        setTimeout(() => {
+          this.fadeControls(); // Fade controls when playing
+        }, 100);
       }
     });
 
@@ -221,12 +224,24 @@ export class Controls {
 
   showControls() {
     this.controlsVisible = true;
-    this.controlsOverlay.classList.remove('hidden');
+    if (this.controlsOverlay) {
+      this.controlsOverlay.classList.remove('hidden');
+      this.controlsOverlay.classList.remove('faded');
+    }
   }
 
   hideControls() {
     this.controlsVisible = false;
-    this.controlsOverlay.classList.add('hidden');
+    if (this.controlsOverlay) {
+      this.controlsOverlay.classList.add('hidden');
+    }
+  }
+
+  fadeControls() {
+    if (this.controlsOverlay) {
+      this.controlsOverlay.classList.remove('hidden');
+      this.controlsOverlay.classList.add('faded');
+    }
   }
 
   updatePlayPauseIcon(isPlaying) {
@@ -253,18 +268,6 @@ export class Controls {
     }
     if (this.wpmSlider) {
       this.wpmSlider.value = wpm;
-    }
-  }
-
-  fadeControls() {
-    if (this.controlsOverlay) {
-      this.controlsOverlay.classList.add('faded');
-    }
-  }
-
-  showControls() {
-    if (this.controlsOverlay) {
-      this.controlsOverlay.classList.remove('faded');
     }
   }
 

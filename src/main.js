@@ -80,6 +80,11 @@ async function init() {
           playbackController.clearScope();
           playbackController.play();
           controls.updatePlayPauseIcon(true);
+          // Ensure controls are visible before fading
+          controls.showControls();
+          setTimeout(() => {
+            controls.fadeControls();
+          }, 100);
         }
       });
     }
