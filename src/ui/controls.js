@@ -63,7 +63,7 @@ export class Controls {
     // Rewind/Forward (5 seconds worth of words)
     this.btnRewind.addEventListener('click', () => {
       if (!this.playback || !this.tokens || this.tokens.length === 0) return;
-      const currentWPM = this.playback.wpm || 300;
+      const currentWPM = this.playback.wpm || 500;
       const wordsPer5Seconds = Math.ceil((currentWPM / 60) * 5); // 5 seconds worth of words
       const newIndex = Math.max(0, this.playback.getCurrentIndex() - wordsPer5Seconds);
       this.playback.setIndex(newIndex);
@@ -77,7 +77,7 @@ export class Controls {
 
     this.btnForward.addEventListener('click', () => {
       if (!this.playback || !this.tokens || this.tokens.length === 0) return;
-      const currentWPM = this.playback.wpm || 300;
+      const currentWPM = this.playback.wpm || 500;
       const wordsPer5Seconds = Math.ceil((currentWPM / 60) * 5); // 5 seconds worth of words
       const newIndex = Math.min(
         this.tokens.length - 1,
@@ -148,14 +148,14 @@ export class Controls {
 
     // Speed controls
     this.btnSpeedDown.addEventListener('click', () => {
-      const currentWPM = this.playback.wpm || 300;
+      const currentWPM = this.playback.wpm || 500;
       const newWPM = Math.max(100, currentWPM - 50);
       this.playback.setWPM(newWPM);
       this.updateWPMDisplay(newWPM);
     });
 
     this.btnSpeedUp.addEventListener('click', () => {
-      const currentWPM = this.playback.wpm || 300;
+      const currentWPM = this.playback.wpm || 500;
       const newWPM = Math.min(1000, currentWPM + 50);
       this.playback.setWPM(newWPM);
       this.updateWPMDisplay(newWPM);
@@ -275,7 +275,7 @@ export class Controls {
     this.updatePlayPauseIcon(this.playback.state === 'playing');
     this.updateProgress();
     // Update WPM display
-    const currentWPM = this.playback.wpm || 300;
+    const currentWPM = this.playback.wpm || 500;
     this.updateWPMDisplay(currentWPM);
     
     // Auto-fade when playing

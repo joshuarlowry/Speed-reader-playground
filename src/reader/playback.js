@@ -12,7 +12,7 @@ export class PlaybackController {
     this.state = 'idle'; // idle | playing | paused | scopeEnd
     this.currentIndex = 0;
     this.scope = null; // { startIndex, endIndex }
-    this.wpm = 300;
+    this.wpm = 500;
     this.rafId = null;
     this.startTime = 0;
     this.targetTime = 0;
