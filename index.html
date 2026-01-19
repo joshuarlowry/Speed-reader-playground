@@ -39,6 +39,25 @@
       <div id="word-container" class="word-container">
         <span id="word-display" class="word-display"></span>
       </div>
+      
+      <!-- Book menu (upper right) -->
+      <div id="book-menu" class="book-menu">
+        <button id="btn-book-menu" class="btn-book-menu" aria-label="Book menu" aria-expanded="false">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+        </button>
+        <div id="book-menu-dropdown" class="book-menu-dropdown hidden">
+          <button id="btn-close-book" class="book-menu-item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 6L6 18"></path>
+              <path d="M6 6l12 12"></path>
+            </svg>
+            <span>Close Book</span>
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Controls overlay -->

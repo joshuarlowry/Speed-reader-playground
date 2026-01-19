@@ -25,6 +25,7 @@ let resumeModal = null;
 // Wait for DOM to be ready
 let uploadArea, readerView, fileInput, btnLoadDemo, wordContainer, wordDisplay;
 let scopeEndModal, btnReplayScope, btnNextSection, btnClearScope, btnContents;
+let btnBookMenu, bookMenuDropdown, btnCloseBook;
 
 // Initialize when DOM is ready
 if (document.readyState === 'loading') {
@@ -117,10 +118,100 @@ async function init() {
     }
 
     // Contents button is now handled by Controls class via btn-contents-quick
+    
+    // Setup book menu
+    btnBookMenu = document.getElementById('btn-book-menu');
+    bookMenuDropdown = document.getElementById('book-menu-dropdown');
+    btnCloseBook = document.getElementById('btn-close-book');
+    
+    if (btnBookMenu && bookMenuDropdown) {
+      btnBookMenu.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = !bookMenuDropdown.classList.contains('hidden');
+        if (isOpen) {
+          closeBookMenu();
+        } else {
+          openBookMenu();
+        }
+      });
+      
+      // Close menu when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!bookMenuDropdown.classList.contains('hidden') && 
+            !bookMenuDropdown.contains(e.target) && 
+            e.target !== btnBookMenu) {
+          closeBookMenu();
+        }
+      });
+      
+      // Close menu on escape
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !bookMenuDropdown.classList.contains('hidden')) {
+          closeBookMenu();
+        }
+      });
+    }
+    
+    if (btnCloseBook) {
+      btnCloseBook.addEventListener('click', () => {
+        closeBook();
+      });
+    }
   } catch (error) {
     console.error('Initialization error:', error);
     throw error; // Let global error handler catch it
   }
+}
+
+function openBookMenu() {
+  if (bookMenuDropdown && btnBookMenu) {
+    bookMenuDropdown.classList.remove('hidden');
+    btnBookMenu.setAttribute('aria-expanded', 'true');
+  }
+}
+
+function closeBookMenu() {
+  if (bookMenuDropdown && btnBookMenu) {
+    bookMenuDropdown.classList.add('hidden');
+    btnBookMenu.setAttribute('aria-expanded', 'false');
+  }
+}
+
+function closeBook() {
+  // Save progress before closing
+  saveCurrentProgress();
+  
+  // Stop playback
+  if (playbackController) {
+    playbackController.pause();
+  }
+  
+  // Reset state
+  currentDocId = null;
+  currentTokens = null;
+  currentOutline = null;
+  playbackController = null;
+  controls = null;
+  contents = null;
+  scopePill = null;
+  resumeModal = null;
+  
+  // Close menu
+  closeBookMenu();
+  
+  // Hide reader view, show upload area
+  if (readerView) readerView.classList.add('hidden');
+  if (uploadArea) uploadArea.classList.remove('hidden');
+  
+  // Hide controls overlay
+  const controlsOverlay = document.getElementById('controls-overlay');
+  if (controlsOverlay) controlsOverlay.classList.add('hidden');
+  
+  // Clear word display
+  if (wordDisplay) wordDisplay.innerHTML = '';
+  
+  // Reset file input so the same file can be re-selected
+  if (fileInput) fileInput.value = '';
 }
 
 async function handleFileUpload(event) {
