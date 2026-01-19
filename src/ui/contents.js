@@ -32,7 +32,7 @@ export class Contents {
     this.contentsList.innerHTML = '';
 
     if (this.outline.length === 0) {
-      this.contentsList.innerHTML = '<p style="padding: 1rem; color: var(--text-muted);">No contents available</p>';
+      this.contentsList.innerHTML = '<p class="p-4 text-muted-foreground text-center">No contents available</p>';
       return;
     }
 
@@ -49,7 +49,7 @@ export class Contents {
       actions.className = 'contents-item-actions';
       
       const btnRead = document.createElement('button');
-      btnRead.className = 'btn-secondary';
+      btnRead.className = 'btn btn-secondary text-xs px-3 py-1.5';
       btnRead.textContent = 'Read';
       btnRead.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -59,7 +59,7 @@ export class Contents {
       actions.appendChild(btnRead);
 
       const btnJump = document.createElement('button');
-      btnJump.className = 'btn-secondary';
+      btnJump.className = 'btn btn-ghost text-xs px-3 py-1.5';
       btnJump.textContent = 'Jump';
       btnJump.addEventListener('click', (e) => {
         e.stopPropagation();

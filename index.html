@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,10 +8,10 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="stylesheet" href="/src/styles.css">
 </head>
-<body>
-  <div id="app">
+<body class="h-full overflow-hidden">
+  <div id="app" class="h-full w-full">
     <!-- Main reader view -->
-    <div id="reader-view" class="reader-view">
+    <div id="reader-view" class="reader-view hidden">
       <div id="scope-indicator" class="scope-indicator hidden"></div>
       <div id="word-container" class="word-container">
         <span id="word-display" class="word-display"></span>
@@ -22,28 +22,31 @@
     <div id="controls-overlay" class="controls-overlay hidden">
       <div class="controls-content">
         <div class="controls-row">
-          <button id="btn-rewind" class="btn-icon" aria-label="Rewind 10 words">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M11 18l-6-6 6-6M18 18l-6-6 6-6"/>
+          <button id="btn-rewind" class="btn btn-icon" aria-label="Rewind 10 words">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="11 17 6 12 11 7"></polyline>
+              <polyline points="18 17 13 12 18 7"></polyline>
             </svg>
           </button>
-          <button id="btn-play-pause" class="btn-primary" aria-label="Play/Pause">
-            <svg id="icon-play" width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+          <button id="btn-play-pause" class="btn btn-play" aria-label="Play/Pause">
+            <svg id="icon-play" width="28" height="28" viewBox="0 0 24 24" fill="currentColor" class="ml-0.5">
               <path d="M8 5v14l11-7z"/>
             </svg>
-            <svg id="icon-pause" class="hidden" width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+            <svg id="icon-pause" class="hidden" width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="6" y="4" width="4" height="16"></rect>
+              <rect x="14" y="4" width="4" height="16"></rect>
             </svg>
           </button>
-          <button id="btn-forward" class="btn-icon" aria-label="Forward 10 words">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M13 18l6-6-6-6M6 18l6-6-6-6"/>
+          <button id="btn-forward" class="btn btn-icon" aria-label="Forward 10 words">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="13 17 18 12 13 7"></polyline>
+              <polyline points="6 17 11 12 6 7"></polyline>
             </svg>
           </button>
-          <button id="btn-settings" class="btn-icon" aria-label="Settings">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="3"/>
-              <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"/>
+          <button id="btn-settings" class="btn btn-icon" aria-label="Settings">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"></path>
             </svg>
           </button>
         </div>
@@ -62,11 +65,14 @@
         </div>
         <div class="modal-body">
           <div class="setting-group">
-            <label for="wpm-slider">Words per minute: <span id="wpm-value">300</span></label>
-            <input type="range" id="wpm-slider" min="100" max="1000" value="300" step="10">
+            <label for="wpm-slider" class="flex items-center justify-between mb-3">
+              <span>Words per minute</span>
+              <span id="wpm-value" class="text-accent font-semibold">300</span>
+            </label>
+            <input type="range" id="wpm-slider" min="100" max="1000" value="300" step="10" class="w-full">
           </div>
           <div class="setting-group">
-            <button id="btn-contents" class="btn-secondary">Contents</button>
+            <button id="btn-contents" class="btn btn-secondary w-full">Contents</button>
           </div>
         </div>
       </div>
@@ -88,11 +94,11 @@
           <h2>Resume Reading</h2>
         </div>
         <div class="modal-body">
-          <p id="resume-preview"></p>
+          <p id="resume-preview" class="text-muted-foreground mb-6 leading-relaxed"></p>
           <div class="modal-actions">
-            <button id="btn-resume" class="btn-primary">Resume where you left off</button>
-            <button id="btn-start-over" class="btn-secondary">Start over</button>
-            <button id="btn-choose-bookmark" class="btn-secondary">Choose bookmark</button>
+            <button id="btn-resume" class="btn btn-primary w-full">Resume where you left off</button>
+            <button id="btn-start-over" class="btn btn-secondary w-full">Start over</button>
+            <button id="btn-choose-bookmark" class="btn btn-ghost w-full">Choose bookmark</button>
           </div>
         </div>
       </div>
@@ -101,12 +107,12 @@
     <!-- Scope end modal -->
     <div id="scope-end-modal" class="modal hidden">
       <div class="modal-content">
-        <div class="modal-body">
-          <p>End of section</p>
+        <div class="modal-body text-center py-8">
+          <p class="text-lg mb-6 text-muted-foreground">End of section</p>
           <div class="modal-actions">
-            <button id="btn-replay-scope" class="btn-primary">Replay</button>
-            <button id="btn-next-section" class="btn-secondary">Next section</button>
-            <button id="btn-clear-scope" class="btn-secondary">Clear scope</button>
+            <button id="btn-replay-scope" class="btn btn-primary w-full">Replay</button>
+            <button id="btn-next-section" class="btn btn-secondary w-full">Next section</button>
+            <button id="btn-clear-scope" class="btn btn-ghost w-full">Clear scope</button>
           </div>
         </div>
       </div>
@@ -115,16 +121,20 @@
     <!-- File upload area (initial state) -->
     <div id="upload-area" class="upload-area">
       <div class="upload-content">
-        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="upload-icon">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-          <polyline points="17 8 12 3 7 8"/>
-          <line x1="12" y1="3" x2="12" y2="15"/>
-        </svg>
+        <div class="mb-8">
+          <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="upload-icon">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+        </div>
         <h1>Speed Reader</h1>
         <p>Upload a document to begin reading</p>
-        <input type="file" id="file-input" accept=".txt,.md,.pdf,.epub" aria-label="Upload document">
-        <label for="file-input" class="btn-primary">Choose File</label>
-        <button id="btn-load-demo" class="btn-secondary">Load Demo</button>
+        <div class="flex flex-col sm:flex-row gap-4 mt-8">
+          <input type="file" id="file-input" accept=".txt,.md,.pdf,.epub" aria-label="Upload document" class="hidden">
+          <label for="file-input" class="btn btn-primary cursor-pointer">Choose File</label>
+          <button id="btn-load-demo" class="btn btn-secondary">Load Demo</button>
+        </div>
       </div>
     </div>
   </div>
