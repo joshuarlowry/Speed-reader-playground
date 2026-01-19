@@ -48,8 +48,17 @@ function getElements() {
   btnContents = document.getElementById('btn-contents');
   
   // Verify critical elements exist
-  if (!uploadArea || !readerView || !fileInput || !wordContainer || !wordDisplay) {
-    throw new Error('Critical DOM elements not found. Check HTML structure.');
+  const missing = [];
+  if (!uploadArea) missing.push('upload-area');
+  if (!readerView) missing.push('reader-view');
+  if (!fileInput) missing.push('file-input');
+  if (!wordContainer) missing.push('word-container');
+  if (!wordDisplay) missing.push('word-display');
+  
+  if (missing.length > 0) {
+    const error = new Error(`Critical DOM elements not found: ${missing.join(', ')}. Check HTML structure.`);
+    console.error(error);
+    throw error;
   }
 }
 
@@ -62,8 +71,9 @@ async function init() {
     fileInput.addEventListener('change', handleFileUpload);
     btnLoadDemo.addEventListener('click', loadDemo);
 
-    // Setup scope end modal
-    btnReplayScope.addEventListener('click', () => {
+    // Setup scope end modal (these might not exist initially)
+    if (btnReplayScope) {
+      btnReplayScope.addEventListener('click', () => {
       scopeEndModal.classList.add('hidden');
       if (playbackController && playbackController.scope) {
         playbackController.setIndex(playbackController.scope.startIndex);
@@ -71,9 +81,11 @@ async function init() {
         playbackController.play();
         controls.updatePlayPauseIcon(true);
       }
-    });
+      });
+    }
 
-    btnNextSection.addEventListener('click', () => {
+    if (btnNextSection) {
+      btnNextSection.addEventListener('click', () => {
       scopeEndModal.classList.add('hidden');
       // Find next section
       if (currentOutline && playbackController && playbackController.scope) {
@@ -86,22 +98,27 @@ async function init() {
           scopePill.hide();
         }
       }
-    });
+      });
+    }
 
-    btnClearScope.addEventListener('click', () => {
+    if (btnClearScope) {
+      btnClearScope.addEventListener('click', () => {
       scopeEndModal.classList.add('hidden');
       if (playbackController) {
         playbackController.clearScope();
         scopePill.hide();
       }
-    });
+      });
+    }
 
     // Setup contents button
-    btnContents.addEventListener('click', () => {
+    if (btnContents) {
+      btnContents.addEventListener('click', () => {
       if (contents) {
         contents.show();
       }
-    });
+      });
+    }
   } catch (error) {
     console.error('Initialization error:', error);
     throw error; // Let global error handler catch it

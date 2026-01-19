@@ -7,6 +7,29 @@
   <title>Speed Reader</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="stylesheet" href="/src/styles.css">
+  <style>
+    /* Fallback styles to ensure visibility */
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    #app {
+      height: 100%;
+      width: 100%;
+    }
+    #upload-area {
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: #0a0a0a;
+      color: #e8e8e8;
+    }
+    #upload-area.hidden {
+      display: none !important;
+    }
+  </style>
 </head>
 <body class="h-full overflow-hidden">
   <div id="app" class="h-full w-full">
