@@ -273,22 +273,17 @@ async function loadDocument(file) {
     uploadArea.classList.add('hidden');
     readerView.classList.remove('hidden');
 
-    // Default behavior: if there are sections, auto-scope to first section
-    // If no sections, check for resume or start from beginning
+    // Show table of contents first if there are sections
     if (currentOutline && currentOutline.length > 0) {
-      // Has sections - set scope to first section and start reading
-      const firstSection = currentOutline[0];
-      playbackController.setScope(firstSection.startIndex, firstSection.endIndex);
-      playbackController.setIndex(firstSection.startIndex);
-      if (scopePill) {
-        scopePill.show(firstSection.title);
-      }
-      if (tokens[firstSection.startIndex]) {
-        renderWord(tokens[firstSection.startIndex].word, wordContainer);
+      // Show the first word as a preview
+      if (tokens[0]) {
+        renderWord(tokens[0].word, wordContainer);
       }
       if (controls) {
         controls.update();
       }
+      // Show contents drawer so user can choose where to start
+      contents.show();
     } else {
       // No sections - check for resume or start from beginning
       const progress = await getProgress(docId);
