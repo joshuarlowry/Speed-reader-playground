@@ -192,6 +192,41 @@
       </div>
     </div>
 
+    <!-- Speed selection modal -->
+    <div id="speed-select-modal" class="modal hidden">
+      <div class="modal-content speed-select-content">
+        <div class="modal-header">
+          <h2>Choose Your Reading Speed</h2>
+        </div>
+        <div class="modal-body">
+          <p class="text-muted-foreground text-center mb-6">Select a starting speed (you can adjust anytime)</p>
+          <div class="speed-options">
+            <button class="speed-option" data-wpm="150">
+              <span class="speed-value">150</span>
+              <span class="speed-label">Relaxed</span>
+            </button>
+            <button class="speed-option" data-wpm="300">
+              <span class="speed-value">300</span>
+              <span class="speed-label">Easy</span>
+            </button>
+            <button class="speed-option speed-option-featured" data-wpm="500">
+              <span class="speed-value">500</span>
+              <span class="speed-label">Standard</span>
+            </button>
+            <button class="speed-option" data-wpm="700">
+              <span class="speed-value">700</span>
+              <span class="speed-label">Fast</span>
+            </button>
+            <button class="speed-option" data-wpm="900">
+              <span class="speed-value">900</span>
+              <span class="speed-label">Ludicrous</span>
+            </button>
+          </div>
+          <p class="text-muted-foreground/60 text-xs text-center mt-6">Words per minute</p>
+        </div>
+      </div>
+    </div>
+
     <!-- File upload area (initial state) -->
     <div id="upload-area" class="upload-area">
       <div class="upload-content-wrapper">
@@ -230,6 +265,15 @@
               <div class="book-info">
                 <span class="book-title">The Brooklyn Murders</span>
                 <span class="book-author">G.D.H. Cole</span>
+              </div>
+            </button>
+            <button class="book-card" data-book="princess-and-the-goblin">
+              <div class="book-cover">
+                <img src="./books/princess-and-the-goblin-cover.avif" alt="The Princess and the Goblin cover" loading="lazy">
+              </div>
+              <div class="book-info">
+                <span class="book-title">The Princess and the Goblin</span>
+                <span class="book-author">George MacDonald</span>
               </div>
             </button>
           </div>

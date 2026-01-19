@@ -21,11 +21,14 @@ let controls = null;
 let contents = null;
 let scopePill = null;
 let resumeModal = null;
+let selectedWPM = 500; // Default WPM
+let pendingFile = null; // File waiting for speed selection
 
 // Wait for DOM to be ready
 let uploadArea, readerView, fileInput, wordContainer, wordDisplay;
 let scopeEndModal, btnReplayScope, btnNextSection, btnClearScope, btnContents;
 let btnBookMenu, bookMenuDropdown, btnCloseBook;
+let speedSelectModal;
 
 // Initialize when DOM is ready
 if (document.readyState === 'loading') {
@@ -158,10 +161,55 @@ async function init() {
         closeBook();
       });
     }
+    
+    // Setup speed selection modal
+    speedSelectModal = document.getElementById('speed-select-modal');
+    if (speedSelectModal) {
+      const speedOptions = speedSelectModal.querySelectorAll('.speed-option');
+      speedOptions.forEach(option => {
+        option.addEventListener('click', () => {
+          const wpm = parseInt(option.dataset.wpm);
+          handleSpeedSelection(wpm, option);
+        });
+      });
+    }
   } catch (error) {
     console.error('Initialization error:', error);
     throw error; // Let global error handler catch it
   }
+}
+
+function showSpeedSelectModal() {
+  if (speedSelectModal) {
+    // Reset any previous selection
+    const speedOptions = speedSelectModal.querySelectorAll('.speed-option');
+    speedOptions.forEach(opt => opt.classList.remove('selected'));
+    speedSelectModal.classList.remove('hidden');
+  }
+}
+
+function hideSpeedSelectModal() {
+  if (speedSelectModal) {
+    speedSelectModal.classList.add('hidden');
+  }
+}
+
+function handleSpeedSelection(wpm, optionElement) {
+  selectedWPM = wpm;
+  
+  // Add selected animation
+  const speedOptions = speedSelectModal.querySelectorAll('.speed-option');
+  speedOptions.forEach(opt => opt.classList.remove('selected'));
+  optionElement.classList.add('selected');
+  
+  // Short delay to show selection animation, then proceed
+  setTimeout(() => {
+    hideSpeedSelectModal();
+    if (pendingFile) {
+      processDocument(pendingFile);
+      pendingFile = null;
+    }
+  }, 300);
 }
 
 function openBookMenu() {
@@ -219,10 +267,12 @@ async function handleFileUpload(event) {
   const file = event.target.files[0];
   if (!file) return;
 
-  await loadDocument(file);
+  // Store file and show speed selection
+  pendingFile = file;
+  showSpeedSelectModal();
 }
 
-async function loadDocument(file) {
+async function processDocument(file) {
   try {
     // Determine file type
     const ext = file.name.split('.').pop().toLowerCase();
@@ -266,8 +316,8 @@ async function loadDocument(file) {
     });
     currentDocId = docId;
 
-    // Initialize playback (creates playbackController, contents, controls, scopePill)
-    initializePlayback(tokens);
+    // Initialize playback with selected WPM
+    initializePlayback(tokens, selectedWPM);
 
     // Show reader view
     uploadArea.classList.add('hidden');
@@ -299,7 +349,7 @@ async function loadDocument(file) {
   }
 }
 
-function initializePlayback(tokens) {
+function initializePlayback(tokens, initialWPM = 500) {
   // Create playback controller
   playbackController = new PlaybackController(
     tokens,
@@ -327,6 +377,9 @@ function initializePlayback(tokens) {
       controls.update();
     }
   );
+  
+  // Set the initial WPM from speed selection
+  playbackController.setWPM(initialWPM);
 
   contents = new Contents(
     currentOutline,
@@ -450,6 +503,11 @@ const SAMPLE_BOOKS = {
     file: 'g-d-h-cole_the-brooklyn-murders.epub',
     title: 'The Brooklyn Murders',
     author: 'G.D.H. Cole'
+  },
+  'princess-and-the-goblin': {
+    file: 'george-macdonald_the-princess-and-the-goblin.epub',
+    title: 'The Princess and the Goblin',
+    author: 'George MacDonald'
   }
 };
 
@@ -477,7 +535,10 @@ async function loadSampleBook(bookId) {
     }
     const blob = await response.blob();
     const file = new File([blob], book.file, { type: 'application/epub+zip' });
-    await loadDocument(file);
+    
+    // Store file and show speed selection
+    pendingFile = file;
+    showSpeedSelectModal();
   } catch (error) {
     console.error('Error loading sample book:', error);
     alert('Error loading book: ' + error.message);

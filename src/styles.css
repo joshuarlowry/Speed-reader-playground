@@ -581,3 +581,85 @@
     transform: translateX(-100%);
   }
 }
+
+/* Speed selection modal */
+.speed-select-content {
+  @apply max-w-lg;
+}
+
+.speed-options {
+  @apply flex justify-center gap-2 md:gap-3 flex-wrap;
+}
+
+.speed-option {
+  @apply flex flex-col items-center justify-center;
+  @apply w-16 h-20 md:w-20 md:h-24;
+  @apply rounded-xl;
+  @apply bg-secondary/50 border border-border;
+  @apply transition-all duration-200;
+  @apply cursor-pointer;
+  @apply hover:bg-accent/10 hover:border-accent/50 hover:scale-105;
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  @apply active:scale-95;
+}
+
+.speed-option:hover .speed-value {
+  @apply text-accent;
+}
+
+.speed-option-featured {
+  @apply bg-accent/10 border-accent/40;
+  @apply ring-1 ring-accent/20;
+}
+
+.speed-option-featured .speed-value {
+  @apply text-accent;
+}
+
+.speed-option-featured:hover {
+  @apply bg-accent/20 border-accent/60;
+}
+
+.speed-value {
+  @apply text-xl md:text-2xl font-semibold text-foreground;
+  @apply transition-colors duration-200;
+}
+
+.speed-label {
+  @apply text-xs text-muted-foreground mt-1;
+  @apply transition-colors duration-200;
+}
+
+.speed-option:hover .speed-label {
+  @apply text-foreground/70;
+}
+
+/* Selected state animation */
+.speed-option.selected {
+  @apply bg-accent border-accent scale-105;
+  @apply ring-2 ring-accent/50;
+  animation: speed-pulse 0.3s ease-out;
+}
+
+.speed-option.selected .speed-value {
+  @apply text-accent-foreground;
+}
+
+.speed-option.selected .speed-label {
+  @apply text-accent-foreground/80;
+}
+
+@keyframes speed-pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 hsl(var(--accent) / 0.4);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 8px hsl(var(--accent) / 0);
+  }
+  100% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 0 hsl(var(--accent) / 0);
+  }
+}
