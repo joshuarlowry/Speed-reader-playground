@@ -40,10 +40,10 @@ export async function ingestEpub(file) {
     manifestItems[id] = { href: opfDir + href, mediaType };
   });
 
-  // Build a map from content file paths to chapter titles from NCX or NAV
-  const tocTitles = await parseTocTitles(zip, opfDoc, manifestItems, opfDir);
+  // Build ordered TOC entries from NCX or NAV (includes fragment identifiers)
+  const tocEntries = await parseTocEntries(zip, opfDoc, manifestItems, opfDir);
 
-  // Get spine items (chapters)
+  // Get spine items (reading order)
   const spineItems = [];
   opfDoc.querySelectorAll('spine itemref').forEach(item => {
     const idref = item.getAttribute('idref');
@@ -52,7 +52,7 @@ export async function ingestEpub(file) {
     }
   });
 
-  // Process each spine item as a chapter
+  // Process each spine item, inserting chapter markers based on TOC entries
   for (let i = 0; i < spineItems.length; i++) {
     const itemPath = spineItems[i];
     const htmlFile = zip.file(itemPath);
@@ -63,18 +63,17 @@ export async function ingestEpub(file) {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
 
-    // Get chapter title from TOC, or fallback to HTML extraction
-    let chapterTitle = getChapterTitleFromToc(itemPath, tocTitles) ||
-                      extractChapterTitleFromHtml(doc) ||
-                      `Chapter ${i + 1}`;
-    
-    markers.push(createChapterMarker(chapterTitle.trim()));
+    // Find all TOC entries that point to this file
+    const fileEntries = tocEntries.filter(entry => {
+      const entryFile = entry.href.split('#')[0];
+      return entryFile === itemPath || itemPath.endsWith(entryFile) || entryFile.endsWith(itemPath.split('/').pop());
+    });
 
-    // Process content, extracting headings and text
+    // Process content with TOC-aware chapter markers
     const body = doc.body || doc.documentElement;
-    processElement(body, markers);
+    processElementWithToc(body, markers, fileEntries, doc);
 
-    // Add paragraph break between chapters (except last)
+    // Add paragraph break between spine items (except last)
     if (i < spineItems.length - 1) {
       markers.push(createParagraphBreakMarker());
     }
@@ -84,55 +83,13 @@ export async function ingestEpub(file) {
 }
 
 /**
- * Parse the table of contents (NCX for EPUB2, NAV for EPUB3) to get chapter titles
- * Returns a map of content paths to titles
+ * Parse the table of contents (NCX for EPUB2, NAV for EPUB3) to get ordered chapter entries
+ * Returns an array of { title, href, fragmentId } in reading order
  */
-async function parseTocTitles(zip, opfDoc, manifestItems, opfDir) {
-  const tocTitles = new Map();
+async function parseTocEntries(zip, opfDoc, manifestItems, opfDir) {
+  const tocEntries = [];
 
-  // Try EPUB3 NAV document first
-  const navItem = Object.values(manifestItems).find(item => 
-    item.mediaType === 'application/xhtml+xml' && item.href.includes('nav')
-  );
-  
-  // Also check for nav property in manifest
-  let navHref = null;
-  opfDoc.querySelectorAll('manifest item').forEach(item => {
-    const properties = item.getAttribute('properties');
-    if (properties && properties.includes('nav')) {
-      const href = item.getAttribute('href');
-      navHref = opfDir + href;
-    }
-  });
-
-  if (navHref) {
-    const navFile = zip.file(navHref);
-    if (navFile) {
-      const navXml = await navFile.async('string');
-      const navDoc = new DOMParser().parseFromString(navXml, 'application/xhtml+xml');
-      
-      // Find the toc nav element
-      const tocNav = navDoc.querySelector('nav[*|type="toc"], nav[epub\\:type="toc"], nav.toc');
-      if (tocNav) {
-        tocNav.querySelectorAll('a').forEach(link => {
-          const href = link.getAttribute('href');
-          const title = link.textContent.trim();
-          if (href && title) {
-            // Normalize the path
-            const normalizedPath = normalizePath(opfDir, navHref, href);
-            tocTitles.set(normalizedPath, title);
-            // Also store without fragment
-            const pathWithoutFragment = normalizedPath.split('#')[0];
-            if (!tocTitles.has(pathWithoutFragment)) {
-              tocTitles.set(pathWithoutFragment, title);
-            }
-          }
-        });
-      }
-    }
-  }
-
-  // Try EPUB2 NCX
+  // Try EPUB2 NCX first (more common and reliable)
   const spine = opfDoc.querySelector('spine');
   const tocId = spine?.getAttribute('toc');
   
@@ -144,32 +101,79 @@ async function parseTocTitles(zip, opfDoc, manifestItems, opfDir) {
       const ncxXml = await ncxFile.async('string');
       const ncxDoc = new DOMParser().parseFromString(ncxXml, 'text/xml');
       
-      // Parse navPoints
-      ncxDoc.querySelectorAll('navPoint').forEach(navPoint => {
-        const label = navPoint.querySelector('navLabel > text');
-        const content = navPoint.querySelector('content');
+      // Parse navPoints in order (they have playOrder attribute)
+      const navPoints = Array.from(ncxDoc.querySelectorAll('navPoint'));
+      navPoints.sort((a, b) => {
+        const orderA = parseInt(a.getAttribute('playOrder') || '0');
+        const orderB = parseInt(b.getAttribute('playOrder') || '0');
+        return orderA - orderB;
+      });
+      
+      for (const navPoint of navPoints) {
+        const label = navPoint.querySelector(':scope > navLabel > text');
+        const content = navPoint.querySelector(':scope > content');
         
         if (label && content) {
           const title = label.textContent.trim();
           const src = content.getAttribute('src');
           
           if (title && src) {
-            // Normalize the path relative to the NCX location
             const ncxDir = ncxPath.substring(0, ncxPath.lastIndexOf('/') + 1);
             const normalizedPath = normalizePath(ncxDir, ncxPath, src);
-            tocTitles.set(normalizedPath, title);
-            // Also store without fragment
-            const pathWithoutFragment = normalizedPath.split('#')[0];
-            if (!tocTitles.has(pathWithoutFragment)) {
-              tocTitles.set(pathWithoutFragment, title);
-            }
+            const [filePath, fragmentId] = normalizedPath.split('#');
+            
+            tocEntries.push({
+              title,
+              href: normalizedPath,
+              filePath,
+              fragmentId: fragmentId || null
+            });
           }
         }
-      });
+      }
     }
   }
 
-  return tocTitles;
+  // If no NCX entries, try EPUB3 NAV document
+  if (tocEntries.length === 0) {
+    let navHref = null;
+    opfDoc.querySelectorAll('manifest item').forEach(item => {
+      const properties = item.getAttribute('properties');
+      if (properties && properties.includes('nav')) {
+        const href = item.getAttribute('href');
+        navHref = opfDir + href;
+      }
+    });
+
+    if (navHref) {
+      const navFile = zip.file(navHref);
+      if (navFile) {
+        const navXml = await navFile.async('string');
+        const navDoc = new DOMParser().parseFromString(navXml, 'application/xhtml+xml');
+        
+        const tocNav = navDoc.querySelector('nav[*|type="toc"], nav[epub\\:type="toc"], nav.toc');
+        if (tocNav) {
+          tocNav.querySelectorAll('a').forEach(link => {
+            const href = link.getAttribute('href');
+            const title = link.textContent.trim();
+            if (href && title) {
+              const normalizedPath = normalizePath(opfDir, navHref, href);
+              const [filePath, fragmentId] = normalizedPath.split('#');
+              
+              tocEntries.push({
+                title,
+                href: normalizedPath,
+                filePath,
+                fragmentId: fragmentId || null
+              });
+            }
+          });
+        }
+      }
+    }
+  }
+
+  return tocEntries;
 }
 
 /**
@@ -198,91 +202,33 @@ function normalizePath(baseDir, basePath, href) {
   return resultParts.join('/');
 }
 
-/**
- * Get chapter title from TOC map
- */
-function getChapterTitleFromToc(itemPath, tocTitles) {
-  // Try exact match first
-  if (tocTitles.has(itemPath)) {
-    return tocTitles.get(itemPath);
-  }
-  
-  // Try without leading directory
-  const filename = itemPath.split('/').pop();
-  for (const [path, title] of tocTitles) {
-    if (path.endsWith(filename) || path.split('/').pop() === filename) {
-      return title;
-    }
-  }
-  
-  // Try matching just the filename without fragment
-  const filenameWithoutFragment = filename.split('#')[0];
-  for (const [path, title] of tocTitles) {
-    const pathFilename = path.split('/').pop().split('#')[0];
-    if (pathFilename === filenameWithoutFragment) {
-      return title;
-    }
-  }
-  
-  return null;
-}
 
 /**
- * Extract chapter title from HTML content using various strategies
+ * Process HTML content, inserting chapter markers based on TOC fragment IDs
  */
-function extractChapterTitleFromHtml(doc) {
-  // Strategy 1: Look for common chapter title classes
-  const chapterTitleSelectors = [
-    '.chapter-title',
-    '.body_chapter-title',
-    '.chapter-header',
-    '.chaptertitle',
-    '[class*="chapter-title"]',
-    '[class*="chaptertitle"]',
-    'h1.chapter',
-    'h2.chapter'
-  ];
-  
-  for (const selector of chapterTitleSelectors) {
-    const el = doc.querySelector(selector);
-    if (el) {
-      const text = el.textContent.replace(/\s+/g, ' ').trim();
-      if (text) return text;
+function processElementWithToc(element, markers, tocEntries, doc) {
+  // Build a map of element IDs to TOC entries for quick lookup
+  const idToTocEntry = new Map();
+  for (const entry of tocEntries) {
+    if (entry.fragmentId) {
+      idToTocEntry.set(entry.fragmentId, entry);
     }
   }
   
-  // Strategy 2: Look for h1 or h2 that looks like a chapter title
-  const headings = doc.querySelectorAll('h1, h2');
-  for (const heading of headings) {
-    const text = heading.textContent.replace(/\s+/g, ' ').trim();
-    // Skip generic or metadata headings
-    if (text && 
-        !text.toLowerCase().includes('project gutenberg') &&
-        !text.toLowerCase().includes('table of contents') &&
-        !text.toLowerCase().includes('copyright') &&
-        text.length > 0 && text.length < 200) {
-      return text;
-    }
+  // Track which TOC entries we've used (to handle entries without fragments)
+  const usedEntries = new Set();
+  
+  // If there are TOC entries without fragments for this file, add the first one at the start
+  const noFragmentEntry = tocEntries.find(e => !e.fragmentId);
+  if (noFragmentEntry) {
+    markers.push(createChapterMarker(noFragmentEntry.title));
+    usedEntries.add(noFragmentEntry);
   }
   
-  // Strategy 3: Check title tag (but skip generic epub filenames)
-  const titleEl = doc.querySelector('title');
-  if (titleEl) {
-    const title = titleEl.textContent.trim();
-    // Skip titles that look like auto-generated filenames
-    if (title && 
-        !title.match(/^[\w_-]+_epub-\d+$/i) &&
-        !title.match(/^part\d+/i) &&
-        !title.match(/^section\d+/i) &&
-        title.length > 0 && title.length < 200) {
-      return title;
-    }
-  }
-  
-  return null;
+  processElementRecursive(element, markers, idToTocEntry, usedEntries);
 }
 
-function processElement(element, markers) {
+function processElementRecursive(element, markers, idToTocEntry, usedEntries) {
   const children = Array.from(element.childNodes);
   let currentText = '';
 
@@ -294,18 +240,57 @@ function processElement(element, markers) {
       }
     } else if (node.nodeType === Node.ELEMENT_NODE) {
       const tagName = node.tagName.toLowerCase();
+      
+      // Check if this element or any ancestor has an ID that matches a TOC entry
+      const elementId = node.id || node.getAttribute('id');
+      if (elementId && idToTocEntry.has(elementId)) {
+        const tocEntry = idToTocEntry.get(elementId);
+        if (!usedEntries.has(tocEntry)) {
+          // Flush any pending text before the chapter marker
+          if (currentText.trim()) {
+            markers.push(createTextMarker(currentText.trim()));
+            markers.push(createParagraphBreakMarker());
+            currentText = '';
+          }
+          markers.push(createChapterMarker(tocEntry.title));
+          usedEntries.add(tocEntry);
+        }
+      }
+      
+      // Also check for anchor elements with matching IDs
+      const anchors = node.querySelectorAll('[id]');
+      for (const anchor of anchors) {
+        const anchorId = anchor.id || anchor.getAttribute('id');
+        if (anchorId && idToTocEntry.has(anchorId) && !usedEntries.has(idToTocEntry.get(anchorId))) {
+          // We'll handle this when we process that element
+        }
+      }
 
-      // Handle headings
+      // Handle headings - but skip if we already added a chapter marker for this
       if (tagName.match(/^h[1-4]$/)) {
         if (currentText.trim()) {
           markers.push(createTextMarker(currentText.trim()));
           markers.push(createParagraphBreakMarker());
           currentText = '';
         }
-        const level = parseInt(tagName.charAt(1));
-        const headingText = node.textContent.trim();
-        if (headingText) {
-          markers.push(createHeadingMarker(level, headingText));
+        
+        // Check if this heading's ID was already used for a chapter marker
+        const headingId = node.id || node.getAttribute('id');
+        const alreadyMarked = headingId && idToTocEntry.has(headingId) && usedEntries.has(idToTocEntry.get(headingId));
+        
+        if (!alreadyMarked) {
+          // Check if any child element has a TOC ID
+          const childWithTocId = node.querySelector('[id]');
+          const childId = childWithTocId?.id || childWithTocId?.getAttribute('id');
+          const childAlreadyMarked = childId && idToTocEntry.has(childId) && usedEntries.has(idToTocEntry.get(childId));
+          
+          if (!childAlreadyMarked) {
+            const level = parseInt(tagName.charAt(1));
+            const headingText = node.textContent.replace(/\s+/g, ' ').trim();
+            if (headingText) {
+              markers.push(createHeadingMarker(level, headingText));
+            }
+          }
         }
       } else if (tagName === 'p' || tagName === 'div') {
         // Process paragraph/div content
@@ -314,10 +299,10 @@ function processElement(element, markers) {
           markers.push(createParagraphBreakMarker());
           currentText = '';
         }
-        processElement(node, markers);
+        processElementRecursive(node, markers, idToTocEntry, usedEntries);
       } else {
         // Other elements - process recursively
-        processElement(node, markers);
+        processElementRecursive(node, markers, idToTocEntry, usedEntries);
       }
     }
   }
