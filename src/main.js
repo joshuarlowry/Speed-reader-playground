@@ -331,6 +331,22 @@ async function saveCurrentProgress() {
   await saveProgress(currentDocId, index, anchorWindow);
 }
 
+// Service worker registration
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    try {
+      const basePath = import.meta.env.BASE_URL || '/';
+      navigator.serviceWorker.register(basePath + 'sw.js')
+        .catch(err => {
+          console.log('SW registration failed:', err);
+          // Don't show this as a critical error - app can work without SW
+        });
+    } catch (err) {
+      console.error('SW registration error:', err);
+    }
+  });
+}
+
 async function loadDemo() {
   try {
     const basePath = import.meta.env.BASE_URL || '/';

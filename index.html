@@ -254,22 +254,5 @@
   </script>
 
   <script type="module" src="/src/main.js"></script>
-  <script type="module">
-    // Service worker registration with error handling
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        try {
-          const basePath = import.meta.env.BASE_URL || '/';
-          navigator.serviceWorker.register(basePath + 'sw.js')
-            .catch(err => {
-              console.log('SW registration failed:', err);
-              // Don't show this as a critical error - app can work without SW
-            });
-        } catch (err) {
-          console.error('SW registration error:', err);
-        }
-      });
-    }
-  </script>
 </body>
 </html>
