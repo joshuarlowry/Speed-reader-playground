@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Offline-first RSVP speed reader for txt, markdown, PDF, and EPUB files">
   <title>Speed Reader</title>
-  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="manifest" href="./manifest.webmanifest">
   <link rel="stylesheet" href="/src/styles.css">
 </head>
 <body class="h-full overflow-hidden">
@@ -139,13 +139,76 @@
     </div>
   </div>
 
+  <!-- Error display (shown if app fails to load) -->
+  <div id="error-display" class="hidden fixed inset-0 z-[9999] flex items-center justify-center bg-background p-4">
+    <div class="max-w-2xl w-full bg-card border border-destructive rounded-lg p-6 shadow-2xl">
+      <h2 class="text-2xl font-bold text-destructive mb-4">Application Error</h2>
+      <pre id="error-message" class="text-sm text-foreground bg-muted p-4 rounded overflow-auto max-h-[60vh] whitespace-pre-wrap font-mono"></pre>
+      <div class="mt-4 flex gap-3">
+        <button onclick="location.reload()" class="btn btn-primary">Reload Page</button>
+        <button onclick="document.getElementById('error-display').classList.add('hidden')" class="btn btn-secondary">Dismiss</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Global error handler - displays errors on page
+    window.addEventListener('error', (event) => {
+      console.error('Global error:', event.error);
+      const errorDisplay = document.getElementById('error-display');
+      const errorMessage = document.getElementById('error-message');
+      if (errorDisplay && errorMessage) {
+        const errorText = event.error 
+          ? `${event.error.name}: ${event.error.message}\n\n${event.error.stack || 'No stack trace'}`
+          : `${event.message} at ${event.filename}:${event.lineno}:${event.colno}`;
+        errorMessage.textContent = errorText;
+        errorDisplay.classList.remove('hidden');
+      }
+    });
+
+    window.addEventListener('unhandledrejection', (event) => {
+      console.error('Unhandled promise rejection:', event.reason);
+      const errorDisplay = document.getElementById('error-display');
+      const errorMessage = document.getElementById('error-message');
+      if (errorDisplay && errorMessage) {
+        const errorText = event.reason instanceof Error
+          ? `Unhandled Promise Rejection: ${event.reason.name}: ${event.reason.message}\n\n${event.reason.stack || 'No stack trace'}`
+          : `Unhandled Promise Rejection: ${String(event.reason)}`;
+        errorMessage.textContent = errorText;
+        errorDisplay.classList.remove('hidden');
+      }
+    });
+
+    // Check if app loaded after 3 seconds
+    setTimeout(() => {
+      const app = document.getElementById('app');
+      const uploadArea = document.getElementById('upload-area');
+      if (app && (!uploadArea || uploadArea.classList.contains('hidden')) && !document.getElementById('reader-view')?.classList.contains('hidden')) {
+        // App might not have initialized - check for errors
+        const errorDisplay = document.getElementById('error-display');
+        if (errorDisplay && errorDisplay.classList.contains('hidden')) {
+          // No error shown but app seems stuck - show a warning
+          console.warn('App may not have initialized properly');
+        }
+      }
+    }, 3000);
+  </script>
+
   <script type="module" src="/src/main.js"></script>
   <script type="module">
+    // Service worker registration with error handling
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        const basePath = import.meta.env.BASE_URL || '/';
-        navigator.serviceWorker.register(basePath + 'sw.js')
-          .catch(err => console.log('SW registration failed:', err));
+        try {
+          const basePath = import.meta.env.BASE_URL || '/';
+          navigator.serviceWorker.register(basePath + 'sw.js')
+            .catch(err => {
+              console.log('SW registration failed:', err);
+              // Don't show this as a critical error - app can work without SW
+            });
+        } catch (err) {
+          console.error('SW registration error:', err);
+        }
       });
     }
   </script>

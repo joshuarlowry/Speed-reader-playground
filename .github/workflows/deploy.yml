@@ -20,9 +20,16 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - run: npm run build
+      - name: Build with correct base path
+        run: npm run build
         env:
           GITHUB_REPOSITORY: ${{ github.repository }}
+      - name: Verify build output
+        run: |
+          echo "Build output contents:"
+          ls -la dist/ || echo "dist directory not found"
+          echo "Checking index.html:"
+          head -20 dist/index.html || echo "index.html not found"
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

@@ -22,67 +22,90 @@ let contents = null;
 let scopePill = null;
 let resumeModal = null;
 
-// DOM elements
-const uploadArea = document.getElementById('upload-area');
-const readerView = document.getElementById('reader-view');
-const fileInput = document.getElementById('file-input');
-const btnLoadDemo = document.getElementById('btn-load-demo');
-const wordContainer = document.getElementById('word-container');
-const wordDisplay = document.getElementById('word-display');
-const scopeEndModal = document.getElementById('scope-end-modal');
-const btnReplayScope = document.getElementById('btn-replay-scope');
-const btnNextSection = document.getElementById('btn-next-section');
-const btnClearScope = document.getElementById('btn-clear-scope');
-const btnContents = document.getElementById('btn-contents');
+// Wait for DOM to be ready
+let uploadArea, readerView, fileInput, btnLoadDemo, wordContainer, wordDisplay;
+let scopeEndModal, btnReplayScope, btnNextSection, btnClearScope, btnContents;
 
-// Initialize
-init();
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  // DOM is already ready
+  init();
+}
+
+function getElements() {
+  uploadArea = document.getElementById('upload-area');
+  readerView = document.getElementById('reader-view');
+  fileInput = document.getElementById('file-input');
+  btnLoadDemo = document.getElementById('btn-load-demo');
+  wordContainer = document.getElementById('word-container');
+  wordDisplay = document.getElementById('word-display');
+  scopeEndModal = document.getElementById('scope-end-modal');
+  btnReplayScope = document.getElementById('btn-replay-scope');
+  btnNextSection = document.getElementById('btn-next-section');
+  btnClearScope = document.getElementById('btn-clear-scope');
+  btnContents = document.getElementById('btn-contents');
+  
+  // Verify critical elements exist
+  if (!uploadArea || !readerView || !fileInput || !wordContainer || !wordDisplay) {
+    throw new Error('Critical DOM elements not found. Check HTML structure.');
+  }
+}
 
 async function init() {
-  // Setup file input
-  fileInput.addEventListener('change', handleFileUpload);
-  btnLoadDemo.addEventListener('click', loadDemo);
+  try {
+    // Get DOM elements
+    getElements();
+    
+    // Setup file input
+    fileInput.addEventListener('change', handleFileUpload);
+    btnLoadDemo.addEventListener('click', loadDemo);
 
-  // Setup scope end modal
-  btnReplayScope.addEventListener('click', () => {
-    scopeEndModal.classList.add('hidden');
-    if (playbackController && playbackController.scope) {
-      playbackController.setIndex(playbackController.scope.startIndex);
-      playbackController.clearScope();
-      playbackController.play();
-      controls.updatePlayPauseIcon(true);
-    }
-  });
+    // Setup scope end modal
+    btnReplayScope.addEventListener('click', () => {
+      scopeEndModal.classList.add('hidden');
+      if (playbackController && playbackController.scope) {
+        playbackController.setIndex(playbackController.scope.startIndex);
+        playbackController.clearScope();
+        playbackController.play();
+        controls.updatePlayPauseIcon(true);
+      }
+    });
 
-  btnNextSection.addEventListener('click', () => {
-    scopeEndModal.classList.add('hidden');
-    // Find next section
-    if (currentOutline && playbackController && playbackController.scope) {
-      const currentEnd = playbackController.scope.endIndex;
-      const nextSection = currentOutline.find(item => item.startIndex >= currentEnd);
-      if (nextSection) {
-        contents.onReadSection(nextSection.startIndex, nextSection.endIndex);
-      } else {
+    btnNextSection.addEventListener('click', () => {
+      scopeEndModal.classList.add('hidden');
+      // Find next section
+      if (currentOutline && playbackController && playbackController.scope) {
+        const currentEnd = playbackController.scope.endIndex;
+        const nextSection = currentOutline.find(item => item.startIndex >= currentEnd);
+        if (nextSection) {
+          contents.onReadSection(nextSection.startIndex, nextSection.endIndex);
+        } else {
+          playbackController.clearScope();
+          scopePill.hide();
+        }
+      }
+    });
+
+    btnClearScope.addEventListener('click', () => {
+      scopeEndModal.classList.add('hidden');
+      if (playbackController) {
         playbackController.clearScope();
         scopePill.hide();
       }
-    }
-  });
+    });
 
-  btnClearScope.addEventListener('click', () => {
-    scopeEndModal.classList.add('hidden');
-    if (playbackController) {
-      playbackController.clearScope();
-      scopePill.hide();
-    }
-  });
-
-  // Setup contents button
-  btnContents.addEventListener('click', () => {
-    if (contents) {
-      contents.show();
-    }
-  });
+    // Setup contents button
+    btnContents.addEventListener('click', () => {
+      if (contents) {
+        contents.show();
+      }
+    });
+  } catch (error) {
+    console.error('Initialization error:', error);
+    throw error; // Let global error handler catch it
+  }
 }
 
 async function handleFileUpload(event) {
