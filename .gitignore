@@ -33,3 +33,6 @@ lerna-debug.log*
 
 # Testing
 coverage/
+
+# Sample data
+sample_data/
