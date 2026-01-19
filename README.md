@@ -6,12 +6,23 @@ A complete, offline-first RSVP (Rapid Serial Visual Presentation) speed reader w
 
 - **Multiple File Formats**: Supports `.txt`, `.md`, `.pdf`, and `.epub` files
 - **ORP-Centered Display**: Optimal Recognition Point (ORP) letter highlighted in red, centered on screen
-- **Smart Timing**: Adjustable WPM with length and punctuation-based timing
+- **Smart Timing**: Adjustable WPM (100-1000) with length and punctuation-based timing
+- **Speed Selection**: Choose your reading speed when opening a book (150, 300, 500, 700, or 900 WPM)
 - **Chapter Navigation**: Jump to chapters/sections or read specific sections
 - **Progress Tracking**: Automatic progress saving with anchor-window matching for reliable resume
+- **Sample Books**: Includes public domain books from Standard Ebooks to try immediately
 - **Offline-First**: Works completely offline after first load (PWA with service worker)
+- **Accessible**: Full keyboard navigation, screen reader support, ARIA labels, and WCAG-compliant contrast
 - **Mobile-First Design**: Responsive, touch-friendly interface
 - **GitHub Pages Ready**: Configured for deployment to GitHub Pages with subpath support
+
+## Sample Books
+
+The app includes three public domain books from [Standard Ebooks](https://standardebooks.org):
+
+- **Pride and Prejudice** by Jane Austen
+- **The Brooklyn Murders** by G.D.H. Cole
+- **The Princess and the Goblin** by George MacDonald
 
 ## Local Development
 
@@ -69,26 +80,28 @@ base: '/your-custom-path/'
 
 ## Usage
 
-### Uploading Files
+### Opening a Book
 
-1. Click "Choose File" or drag and drop a file
-2. Supported formats: `.txt`, `.md`, `.pdf`, `.epub`
-3. The file will be processed and tokenized automatically
+1. Click "Upload File" to select a document, or click a sample book
+2. Choose your reading speed (150-900 WPM)
+3. For books with chapters, the table of contents opens automatically
 
 ### Reading Controls
 
-- **Tap reader area**: Show/hide controls
-- **Play/Pause**: Large center button
-- **Rewind/Forward**: Skip 10 words backward/forward
+Controls appear faded at the bottom of the screen and become fully visible on mouse movement or touch.
+
+- **Play/Pause**: Large center button (or spacebar)
+- **Rewind/Forward**: Skip 5 seconds worth of words
+- **Previous/Next Section**: Jump between chapters
+- **Speed Adjustment**: +/- buttons to change WPM by 50
 - **Progress Scrubber**: Drag to jump to any position
-- **Settings**: Adjust WPM (100-1000), access Contents
+- **Contents**: Open table of contents
 
 ### Chapter Navigation
 
-1. Open Settings and click "Contents"
+1. Click the Contents button (list icon) in the controls
 2. View the document outline (chapters for EPUB, headings for Markdown)
-3. **Jump**: Navigate to that section
-4. **Read**: Set scope to read only that section
+3. Click any section to start reading from there
 
 ### Resuming
 
@@ -115,7 +128,7 @@ The Optimal Recognition Point (ORP) is calculated based on word length:
 - 10-13 chars: index 3
 - 14+ chars: index 4
 
-The ORP letter is highlighted in red and centered on screen using canvas-based text measurement.
+The ORP letter is highlighted in red and centered on screen.
 
 ### Timing Model
 
@@ -143,13 +156,23 @@ All data is stored locally in IndexedDB:
 
 The service worker caches all assets for offline use. After the first load, the app works completely offline.
 
+### Accessibility
+
+The app follows WCAG 2.1 guidelines:
+- Full keyboard navigation with visible focus indicators
+- Screen reader support with ARIA labels and live regions
+- Skip link for keyboard users
+- Proper heading hierarchy and semantic HTML
+- Color contrast ratios meeting AA standards
+- Reduced motion support via `prefers-reduced-motion`
+
 ## Project Structure
 
 ```
 /
-├── index.html              # Main HTML
+├── index.html              # Main HTML with modals and UI structure
 ├── src/
-│   ├── main.js            # App orchestration
+│   ├── main.js            # App orchestration and event handling
 │   ├── reader/            # Reading engine
 │   │   ├── orp.js         # ORP calculation & rendering
 │   │   ├── timing.js      # Timing calculations
@@ -169,19 +192,20 @@ The service worker caches all assets for offline use. After the first load, the 
 │   │   ├── progress.js
 │   │   └── bookmarks.js
 │   ├── ui/                # UI components
-│   │   ├── controls.js
-│   │   ├── contents.js
-│   │   ├── resumeModal.js
-│   │   └── scopePill.js
-│   └── styles.css         # Main stylesheet
+│   │   ├── controls.js    # Playback controls with auto-fade
+│   │   ├── contents.js    # Table of contents drawer
+│   │   ├── resumeModal.js # Resume/start over dialog
+│   │   └── scopePill.js   # Section indicator
+│   └── styles.css         # Tailwind-based stylesheet
 ├── public/
 │   ├── manifest.webmanifest
-│   ├── icons/             # PWA icons (add icon-192.png, icon-512.png)
+│   ├── books/             # Sample EPUB files and covers
+│   ├── icons/             # PWA icons
 │   └── demo.txt           # Demo content
-├── sw.js                  # Service worker
+├── sw.js                  # Service worker for offline support
 ├── vite.config.js         # Vite configuration
+├── tailwind.config.js     # Tailwind CSS configuration
 └── package.json
-
 ```
 
 ## Browser Support
@@ -189,6 +213,19 @@ The service worker caches all assets for offline use. After the first load, the 
 - Modern browsers with ES6+ support
 - IndexedDB support required
 - Service Worker support for offline functionality
+- CSS `:has()` selector support (Chrome 105+, Safari 15.4+, Firefox 121+)
+
+## Future Improvements
+
+Some ideas for future development:
+
+- [ ] Bookmark management UI
+- [ ] Custom themes / light mode
+- [ ] Font size and family options
+- [ ] Reading statistics and history
+- [ ] Import/export progress data
+- [ ] Keyboard shortcuts help overlay
+- [ ] Word highlighting mode (alternative to RSVP)
 
 ## License
 
