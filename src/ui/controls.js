@@ -8,9 +8,12 @@ export class Controls {
     this.tokens = tokens;
     this.onShowContents = onShowContents;
     this.outline = outline || [];
-    this.controlsVisible = false;
+    this.controlsVisible = true; // Controls always visible now
+    this.fadeTimeout = null;
     this.setupElements();
     this.setupEventListeners();
+    // Start with controls visible but faded
+    this.fadeControls();
   }
 
   setupElements() {
@@ -22,7 +25,7 @@ export class Controls {
     this.btnRewind = document.getElementById('btn-rewind');
     this.btnForward = document.getElementById('btn-forward');
     this.btnPrevSection = document.getElementById('btn-prev-section');
-    this.btnNextSection = document.getElementById('btn-next-section');
+    this.btnNextSection = document.getElementById('btn-next-section-controls');
     this.btnSpeedDown = document.getElementById('btn-speed-down');
     this.btnSpeedUp = document.getElementById('btn-speed-up');
     this.btnContentsQuick = document.getElementById('btn-contents-quick');
@@ -34,14 +37,40 @@ export class Controls {
     this.btnCloseSettings = document.getElementById('btn-close-settings');
     this.wpmSlider = document.getElementById('wpm-slider');
     this.wpmValue = document.getElementById('wpm-value');
+    // Screen reader announcer
+    this.srAnnouncer = document.getElementById('sr-announcer');
+  }
+  
+  // Announce to screen readers
+  announce(message) {
+    if (this.srAnnouncer) {
+      this.srAnnouncer.textContent = message;
+      // Clear after a short delay to allow repeated announcements
+      setTimeout(() => {
+        this.srAnnouncer.textContent = '';
+      }, 1000);
+    }
   }
 
   setupEventListeners() {
-    // Toggle controls on reader tap
-    this.readerView.addEventListener('click', (e) => {
-      if (e.target === this.readerView || e.target.closest('.word-container')) {
-        this.toggleControls();
-      }
+    // Show controls on mouse movement, fade after inactivity
+    this.readerView.addEventListener('mousemove', () => {
+      this.showControlsTemporarily();
+    });
+    
+    // Also show on touch
+    this.readerView.addEventListener('touchstart', () => {
+      this.showControlsTemporarily();
+    });
+    
+    // Show controls when interacting with the controls themselves
+    this.controlsOverlay.addEventListener('mouseenter', () => {
+      this.showControls();
+      this.clearFadeTimeout();
+    });
+    
+    this.controlsOverlay.addEventListener('mouseleave', () => {
+      this.scheduleFade();
     });
 
     // Play/Pause
@@ -50,13 +79,13 @@ export class Controls {
         this.playback.pause();
         this.updatePlayPauseIcon(false);
         this.showControls(); // Show controls when paused
+        this.announce('Paused');
       } else {
         this.playback.play();
         this.updatePlayPauseIcon(true);
-        // Small delay to ensure controls are visible before fading
-        setTimeout(() => {
-          this.fadeControls(); // Fade controls when playing
-        }, 100);
+        this.announce('Playing');
+        // Schedule fade after playing starts
+        this.scheduleFade();
       }
     });
 
@@ -213,13 +242,23 @@ export class Controls {
     });
   }
 
-  toggleControls() {
-    this.controlsVisible = !this.controlsVisible;
-    if (this.controlsVisible) {
-      this.controlsOverlay.classList.remove('hidden');
-    } else {
-      this.controlsOverlay.classList.add('hidden');
+  clearFadeTimeout() {
+    if (this.fadeTimeout) {
+      clearTimeout(this.fadeTimeout);
+      this.fadeTimeout = null;
     }
+  }
+  
+  scheduleFade(delay = 2000) {
+    this.clearFadeTimeout();
+    this.fadeTimeout = setTimeout(() => {
+      this.fadeControls();
+    }, delay);
+  }
+  
+  showControlsTemporarily() {
+    this.showControls();
+    this.scheduleFade();
   }
 
   showControls() {
@@ -248,15 +287,22 @@ export class Controls {
     if (isPlaying) {
       this.iconPlay.classList.add('hidden');
       this.iconPause.classList.remove('hidden');
+      this.btnPlayPause.setAttribute('aria-label', 'Pause');
+      this.btnPlayPause.setAttribute('aria-pressed', 'true');
     } else {
       this.iconPlay.classList.remove('hidden');
       this.iconPause.classList.add('hidden');
+      this.btnPlayPause.setAttribute('aria-label', 'Play');
+      this.btnPlayPause.setAttribute('aria-pressed', 'false');
     }
   }
 
   updateProgress() {
     const progress = this.playback.getProgress();
+    const roundedProgress = Math.round(progress);
     this.progressScrubber.value = progress;
+    this.progressScrubber.setAttribute('aria-valuenow', roundedProgress);
+    this.progressScrubber.setAttribute('aria-valuetext', `${roundedProgress}% complete`);
   }
 
   updateWPMDisplay(wpm) {
@@ -278,11 +324,12 @@ export class Controls {
     const currentWPM = this.playback.wpm || 500;
     this.updateWPMDisplay(currentWPM);
     
-    // Auto-fade when playing
+    // When paused, show controls fully; when playing, they should be faded
     if (this.playback.state === 'playing') {
-      this.fadeControls();
+      this.scheduleFade(500); // Fade quickly after update while playing
     } else {
       this.showControls();
+      this.clearFadeTimeout(); // Don't fade when paused
     }
   }
 }

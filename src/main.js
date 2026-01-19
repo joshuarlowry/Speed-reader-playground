@@ -46,7 +46,7 @@ function getElements() {
   wordDisplay = document.getElementById('word-display');
   scopeEndModal = document.getElementById('scope-end-modal');
   btnReplayScope = document.getElementById('btn-replay-scope');
-  btnNextSection = document.getElementById('btn-next-section');
+  btnNextSection = document.getElementById('btn-next-section-modal');
   btnClearScope = document.getElementById('btn-clear-scope');
   btnContents = document.getElementById('btn-contents');
   
@@ -166,10 +166,31 @@ async function init() {
     speedSelectModal = document.getElementById('speed-select-modal');
     if (speedSelectModal) {
       const speedOptions = speedSelectModal.querySelectorAll('.speed-option');
-      speedOptions.forEach(option => {
+      speedOptions.forEach((option, index) => {
+        // Click handler
         option.addEventListener('click', () => {
           const wpm = parseInt(option.dataset.wpm);
           handleSpeedSelection(wpm, option);
+        });
+        
+        // Keyboard support
+        option.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            const wpm = parseInt(option.dataset.wpm);
+            handleSpeedSelection(wpm, option);
+          }
+          // Arrow key navigation for radiogroup
+          if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+            e.preventDefault();
+            const nextIndex = (index + 1) % speedOptions.length;
+            speedOptions[nextIndex].focus();
+          }
+          if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+            e.preventDefault();
+            const prevIndex = (index - 1 + speedOptions.length) % speedOptions.length;
+            speedOptions[prevIndex].focus();
+          }
         });
       });
     }
@@ -179,28 +200,53 @@ async function init() {
   }
 }
 
+let previouslyFocusedBeforeSpeedModal = null;
+
 function showSpeedSelectModal() {
   if (speedSelectModal) {
+    // Store focused element
+    previouslyFocusedBeforeSpeedModal = document.activeElement;
+    
     // Reset any previous selection
     const speedOptions = speedSelectModal.querySelectorAll('.speed-option');
-    speedOptions.forEach(opt => opt.classList.remove('selected'));
+    speedOptions.forEach(opt => {
+      opt.classList.remove('selected');
+      opt.setAttribute('aria-checked', 'false');
+    });
     speedSelectModal.classList.remove('hidden');
+    
+    // Focus the recommended (500 WPM) option
+    setTimeout(() => {
+      const defaultOption = speedSelectModal.querySelector('.speed-option-featured');
+      if (defaultOption) {
+        defaultOption.focus();
+      }
+    }, 50);
   }
 }
 
 function hideSpeedSelectModal() {
   if (speedSelectModal) {
     speedSelectModal.classList.add('hidden');
+    
+    // Restore focus
+    if (previouslyFocusedBeforeSpeedModal && previouslyFocusedBeforeSpeedModal.focus) {
+      previouslyFocusedBeforeSpeedModal.focus();
+    }
   }
 }
 
 function handleSpeedSelection(wpm, optionElement) {
   selectedWPM = wpm;
   
-  // Add selected animation
+  // Update ARIA states and visual selection
   const speedOptions = speedSelectModal.querySelectorAll('.speed-option');
-  speedOptions.forEach(opt => opt.classList.remove('selected'));
+  speedOptions.forEach(opt => {
+    opt.classList.remove('selected');
+    opt.setAttribute('aria-checked', 'false');
+  });
   optionElement.classList.add('selected');
+  optionElement.setAttribute('aria-checked', 'true');
   
   // Short delay to show selection animation, then proceed
   setTimeout(() => {
@@ -319,9 +365,15 @@ async function processDocument(file) {
     // Initialize playback with selected WPM
     initializePlayback(tokens, selectedWPM);
 
-    // Show reader view
+    // Show reader view and controls
     uploadArea.classList.add('hidden');
     readerView.classList.remove('hidden');
+    
+    // Show controls overlay (starts faded)
+    const controlsOverlay = document.getElementById('controls-overlay');
+    if (controlsOverlay) {
+      controlsOverlay.classList.remove('hidden');
+    }
 
     // Show table of contents first if there are sections
     if (currentOutline && currentOutline.length > 0) {

@@ -15,14 +15,14 @@
     --secondary: 0 0% 12%;
     --secondary-foreground: 0 0% 91%;
     --muted: 0 0% 12%;
-    --muted-foreground: 0 0% 50%;
-    --accent: 0 70% 45%;
-    --accent-foreground: 0 0% 91%;
+    --muted-foreground: 0 0% 56%; /* Improved from 50% for better contrast (WCAG AA) */
+    --accent: 0 70% 50%; /* Improved from 45% for better contrast */
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 62% 30%;
     --destructive-foreground: 0 0% 91%;
-    --border: 0 0% 15%;
-    --input: 0 0% 15%;
-    --ring: 0 70% 45%;
+    --border: 0 0% 18%; /* Slightly lighter for better visibility */
+    --input: 0 0% 18%;
+    --ring: 0 70% 50%;
     --radius: 0.5rem;
     --font-sans: system-ui, -apple-system, sans-serif;
     --font-serif: Georgia, "Times New Roman", serif;
@@ -42,6 +42,11 @@
     @apply h-full bg-background text-foreground font-sans antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
+  
+  /* Prevent scroll when reader is active */
+  body:has(#reader-view:not(.hidden)) {
+    overflow: hidden;
+  }
 }
 
 @layer utilities {
@@ -53,6 +58,34 @@
   .hidden {
     display: none !important;
   }
+  
+  /* Screen reader only - visually hidden but accessible */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+}
+
+/* Skip link for keyboard navigation */
+.skip-link {
+  @apply fixed left-4 z-[10000];
+  @apply bg-primary text-primary-foreground px-4 py-2 rounded-md;
+  @apply font-medium text-sm;
+  @apply transition-all duration-200;
+  top: -100px; /* Hidden off-screen */
+}
+
+.skip-link:focus {
+  top: 1rem;
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
 }
 
 /* Custom animations */
@@ -169,7 +202,7 @@
 
 /* Scope indicator */
 .scope-indicator {
-  @apply absolute top-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-accent/10 border border-accent/30 rounded-full text-sm text-muted-foreground backdrop-blur-md;
+  @apply absolute top-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-accent/20 border border-accent/40 rounded-full text-sm text-foreground backdrop-blur-md;
   @apply shadow-lg shadow-accent/10;
   animation: fade-in 0.3s ease-out;
 }
@@ -181,7 +214,7 @@
 
 .btn-book-menu {
   @apply w-9 h-9 rounded-full flex items-center justify-center;
-  @apply text-muted-foreground/40 hover:text-muted-foreground;
+  @apply text-muted-foreground hover:text-foreground;
   @apply bg-transparent hover:bg-muted/30;
   @apply border border-transparent hover:border-border/30;
   @apply transition-all duration-200;
@@ -233,14 +266,11 @@
 }
 
 .controls-overlay.faded {
-  opacity: 0.2;
+  opacity: 0.3;
   /* Controls remain fully interactive even when faded */
 }
 
-.controls-overlay.faded:hover {
-  opacity: 1;
-  transition: opacity 0.2s ease-out;
-}
+/* No need for hover state since mouse movement shows controls fully */
 
 .controls-content {
   @apply max-w-2xl mx-auto;
@@ -403,6 +433,8 @@
   @apply rounded-lg cursor-pointer transition-colors duration-150;
   @apply hover:bg-accent/5 active:bg-accent/10;
   @apply border border-transparent hover:border-accent/10;
+  @apply focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background;
+  @apply focus:bg-accent/5 focus:border-accent/20;
   padding: 0.75rem 1rem;
 }
 
@@ -435,7 +467,7 @@
 
 /* Upload area */
 .upload-area {
-  @apply flex items-center justify-center w-full h-full p-4 md:p-8;
+  @apply flex items-start justify-center w-full p-4 md:p-8 pt-8 md:pt-16;
   background: 
     radial-gradient(ellipse 100% 50% at 50% 0%, hsl(var(--accent) / 0.05) 0%, transparent 50%),
     hsl(var(--background));
@@ -451,6 +483,7 @@
 .upload-content-wrapper {
   @apply w-full max-w-2xl mx-auto animate-fade-in;
   @apply flex flex-col gap-8;
+  @apply py-8;
 }
 
 .upload-header {
