@@ -136,7 +136,7 @@
 .word-display {
   @apply font-serif text-4xl md:text-6xl lg:text-7xl leading-tight text-foreground inline-block whitespace-nowrap;
   font-feature-settings: "liga" 1, "kern" 1, "onum" 1;
-  letter-spacing: -0.02em;
+  letter-spacing: 0.04em;
   /* No transitions - words must appear/disappear instantly for high-speed reading */
   /* Optimize for stable rendering */
   will-change: transform;
